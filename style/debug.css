@@ -1,0 +1,61 @@
+#debug {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 10000; /* High z-index to stay above wheel and header */
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+  width: 180px;
+  overflow: hidden;
+}
+
+/* Button style */
+#debug-toggle {
+  width: 100%;
+  background: #444;
+  color: white;
+  border: none;
+  font-family: monospace;
+  font-size: 10px;
+  padding: 4px;
+  cursor: pointer;
+  margin-bottom: 5px;
+  border-radius: 3px;
+}
+
+#debug-toggle:hover { background: #000; }
+
+/* The Content Area */
+#debug-content {
+  transition: opacity 0.2s ease;
+}
+
+/* Closed State Styles */
+#debug.debug-closed {
+  width: 110px; /* Shrink width */
+  background: rgba(255, 255, 255, 0.5);
+}
+
+#debug.debug-closed #debug-content {
+  opacity: 0;
+  pointer-events: none; /* Can't click hidden buttons */
+  height: 0;
+  margin: 0;
+}
+
+#debug label {
+  color: black;
+  font-size: 11px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 2px;
+}
+
+#debug select, #debug input {
+  width: 100%;
+  margin-bottom: 5px;
+}

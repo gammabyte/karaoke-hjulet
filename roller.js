@@ -1,0 +1,375 @@
+function adjustColor(hex, amount) {
+    hex = hex.replace(/^#/, '');
+
+    if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+    }
+
+    // Convert hex to decimal integers
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    // Add the amount to each channel (positive to lighten, negative to darken)
+    // We use Math.max(0, ...) and Math.min(255, ...) to stay in bounds
+    r = Math.max(0, Math.min(255, r + amount));
+    g = Math.max(0, Math.min(255, g + amount));
+    b = Math.max(0, Math.min(255, b + amount));
+
+    // Convert back to hex and pad with zeros
+    const getHex = (n) => n.toString(16).padStart(2, '0');
+
+    return `#${getHex(r)}${getHex(g)}${getHex(b)}`;
+}
+class Roller {
+  constructor(container, canvas, entries) {
+    this.container = container;
+    this.canvas = canvas;
+    this.rotation = 0;
+
+    this.rect = null;
+    this.time = 0;
+    this.rects = [];
+
+    this.boxheight = 50;
+    this.boxwidth = this.canvas.width;
+
+    this.totalMove = 0;
+    
+    this.update(entries);
+  }
+  
+  update(entries) {
+    // undefined guard
+    if (!entries) return;
+
+    this.canvas.clear();
+    this.rotation = 0;
+    this.time = 0;
+    this.totalMove = 0;
+    
+    this.rect = null;
+    //this.time = 0;
+    this.rects = [];
+
+    this.entries = entries;
+    // shuffle the entries
+    const shuffle = (array) => { 
+      for (let i = array.length - 1; i > 0; i--) { 
+        const j = Math.floor(Math.random() * (i + 1)); 
+        [array[i], array[j]] = [array[j], array[i]]; 
+      } 
+      return array; 
+    };
+  
+    this.entries = shuffle(this.entries)
+  }
+
+  createbigbox(ystart) {
+    let alles = [];
+
+    for (let i = 0; i < this.entries.length; ++i) {
+      //let randomColor = Math.floor(Math.random() * 16777215).toString(16);
+      let randomColor = colorsroller[i % colorsroller.length];
+
+      let r = new fabric.Rect({
+        left: 0,
+        top: ystart + i * this.boxheight,
+        width: this.boxwidth,
+        height: this.boxheight,
+        fill: randomColor,
+      });
+
+      let fontsize = 24;
+
+      var text = new fabric.Text(this.entries[i], {
+        top: ystart + i * this.boxheight + fontsize / 2,
+        left: 45,
+        fontFamily: "Verdana",
+        fontSize: fontsize,
+        fontWeight: "bold",
+        fill: "black",
+        stroke: "white",
+        strokeWidth: 0.5,
+      });
+
+      let group1 = new fabric.Group([r, text]);
+
+      alles.push(group1);
+    }
+    return alles;
+  }
+
+  theme(primaryColor) {
+    this.edge.set('stroke', primaryColor); // You can use CSS variables here too!
+    this.triangle.set('fill', adjustColor(primaryColor, 100));
+
+    this.canvas.renderAll();
+  }
+
+  init() {
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+    /*
+    let alles1 = this.createbigbox(0);
+    let alles2 = this.createbigbox(this.entries.length * this.boxheight);
+
+    let group1 = new fabric.Group(alles1);
+    this.rects.push(group1);
+    this.canvas.add(group1);
+
+    let group2 = new fabric.Group(alles2);
+    this.rects.push(group2);
+    this.canvas.add(group2);
+    */
+
+    let groups = this.createbigbox(-60);
+
+    for (let i = 0; i < groups.length; ++i) {
+      this.rects.push(groups[i]);
+      //this.canvas.add(groups[i]);
+    }
+
+    let thick = 45;
+    let pad = 4;
+
+    let edgeblack = new fabric.Rect({
+      left: 0,
+      top: 0,
+      width: this.canvas.width - thick,
+      height: this.canvas.height - thick,
+      fill: "transparent",
+      stroke: "black",
+      strokeWidth: thick,
+    });
+
+    let edgewhite = new fabric.Rect({
+      left: 28,
+      top: 28,
+      width: this.canvas.width - 64,
+      height: this.canvas.height - 64,
+      fill: "transparent",
+      stroke: "white",
+      strokeWidth: thick,
+      strokeWidth: 8,
+      strokeDashArray: [10, 5],
+    });
+
+    let edge = new fabric.Rect({
+      left: pad,
+      top: pad,
+      width: this.canvas.width - thick,
+      height: this.canvas.height - thick,
+      fill: "transparent",
+      stroke: "gold",
+      strokeWidth: thick - pad * 2,
+    });
+
+    this.edge = edge; // really just for setting theme color
+
+    let thegroup = [edgeblack, edge, edgewhite];
+
+    // top and bottom
+    let numTopBottom = 10;
+    for (let i = 0; i < numTopBottom; ++i) {
+      let slice = this.canvas.width / numTopBottom;
+
+      let color1 = colorsroller[i % colorsroller.length];
+
+      let bulb1 = this.bulb(color1, 10);
+      bulb1.left = thick / 2 + slice * i;
+      bulb1.top = thick / 2;
+
+      let color2 = colorsroller[(i + 3) % colorsroller.length];
+      let bulb2 = this.bulb(color2, 10);
+
+      bulb2.left = thick / 2 + slice * i;
+      bulb2.top = this.canvas.height - thick / 2;
+
+      thegroup.push(bulb1);
+      thegroup.push(bulb2);
+    }
+
+    // left and right
+    let numLeftRight = 20;
+    for (let i = 0; i < numLeftRight - 2; ++i) {
+      let slice = this.canvas.height / numLeftRight;
+
+      let color1 = colorsroller[i % colorsroller.length];
+
+      let bulb1 = this.bulb(color1, 10);
+      bulb1.left = thick / 2;
+      bulb1.top = thick / 2 + slice * i + slice;
+
+      let color2 = colorsroller[(i + 3) % colorsroller.length];
+      let bulb2 = this.bulb(color2, 10);
+
+      bulb2.left = this.canvas.width - thick / 2;
+      bulb2.top = thick / 2 + slice * i + slice;
+
+      thegroup.push(bulb1);
+      thegroup.push(bulb2);
+    }
+
+    // the arrow pointing to the choice
+    var wheelArrow = new fabric.StaticCanvas("not_used");
+    wheelArrow.setWidth(document.getElementById("leftbox").offsetWidth);
+    wheelArrow.setHeight(document.getElementById("leftbox").offsetHeight);
+
+    const triangleHeight = 100;
+    const triangleWidth = 100;
+    const triangleStroke = 4;
+
+    const triangle = new fabric.Triangle({
+      width: triangleWidth - 5,
+      height: triangleHeight,
+      fill: "#FFAA1D",
+      left: this.canvas.width - triangleWidth - triangleStroke - 5,
+      top: (this.canvas.height - triangleHeight) / 2,
+      stroke: "black",
+      strokeWidth: triangleStroke,
+    });
+    this.triangle = triangle; // used for setting theme color
+
+    triangle.rotate(-90);
+
+    thegroup.push(triangle);
+
+    this.frame = new fabric.Group(thegroup);
+
+    for (let i = 0; i < this.rects.length; ++i) {
+      this.canvas.add(this.rects[i]);
+    }
+
+    this.canvas.add(this.frame);
+  }
+
+  changeme(canco, target) {
+    const maxxo = this.entries.length * this.boxheight;
+
+    return () => {
+      const currentRect = target;
+      currentRect.top = currentRect.top % maxxo;
+
+      if (currentRect.top > maxxo) {
+        console.log("JOSJSO");
+      }
+      const canny = canco;
+
+      if (currentRect.top > 0 && currentRect.top < this.canvas.height) {
+        if (!canny._objects.includes(currentRect)) {
+          canny.add(currentRect);
+        }
+      } else {
+        if (canny._objects.includes(currentRect)) {
+          canny.remove(currentRect);
+        }
+      }
+
+      canny.bringToFront(this.frame);
+    };
+  }
+
+  roll(duration, callback) {
+    const fullsize = this.entries.length * this.boxheight;
+
+    const move = 2 * fullsize + Math.random() * fullsize;
+
+    this.totalMove += move;
+
+    let calledComplete = false;
+
+    for (let i = 0; i < this.rects.length; ++i) {
+      let rect = this.rects[i];
+      rect.animate(
+        {
+          top: rect.top + move,
+        },
+        {
+          duration: duration,
+          easing: fabric.util.ease.easeInOutQuad,
+          onChange: this.changeme(this.canvas, rect),
+          onComplete: () => {
+            if (calledComplete) return;
+
+            const correction = this.canvas.height / this.boxheight / 2;
+
+            let hit = this.totalMove % fullsize;
+            let index = hit / this.boxheight;
+            let realindex = -Math.floor(index) + Math.ceil(+correction); //+ 9;
+            realindex = (this.entries.length + realindex) % this.entries.length;
+            let artist = this.entries[realindex];
+
+            calledComplete = true;
+
+            callback(artist);
+          },
+        }
+      );
+
+      //      setInterval(() => this.canvas.requestRenderAllBound(), 16);
+    }
+  }
+
+  somefunc() {
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+    const containerheight = 400;
+    const boxheight = 100;
+    let index = easeInOutQuint(this.time);
+    index = index % this.rects.length;
+
+    console.log("doit, time: " + this.time + ", index: " + index);
+
+    for (let i = 0; i < this.rects.length; ++i) {
+      this.rects[i].top = cy + (index - i) * boxheight;
+    }
+
+    this.canvas.renderAll();
+
+    this.time += 0.00001625;
+  }
+  bulb(color, size) {
+    var circle3 = new fabric.Circle({
+      radius: size,
+      originY: "center",
+      originX: "center",
+      fill: color,
+      stroke: "white",
+      strokeWidth: 2,
+    });
+
+    var cir2 = new fabric.Circle({
+      radius: 3,
+      left: 2,
+      top: 2,
+      originY: "center",
+      originX: "center",
+      fill: "white",
+    });
+
+    var group = new fabric.Group([circle3, cir2]);
+    group.set({
+      originX: "center",
+      originY: "center",
+    });
+    return group;
+  }
+}
+
+function easeInOutQuint(x) {
+  return x < 0.5 ? 16 * x * x * x * x * x : 1 - Math.pow(-2 * x + 2, 5) / 2;
+}
+
+const colorsroller = [
+  "#FF0000", // Red (Primary)
+  "#00FF00", // Green (Primary)
+  "#0000FF", // Blue (Primary)
+  "#FFFF00", // Yellow (Secondary)
+  "#FFA500", // Orange (Secondary)
+  "#FF00FF", // Magenta (Secondary)
+  "#00FFFF", // Cyan (Secondary)
+  "#800080", // Purple (Tertiary)
+  "#808000", // Olive (Tertiary)
+  "#008080", // Teal (Tertiary)
+];

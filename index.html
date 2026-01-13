@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fabric.js Rounded Triangle</title>
+    <style>
+      .popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 800px;
+        height: 800px;
+        background-color: gold;
+        clip-path: polygon(50% 0, 79% 90%, 2% 35%, 98% 35%, 21% 90%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 72px;
+        font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+        color: black;
+        display: none;
+        animation: flashZoom 3s ease-in-out forwards;
+      }
+
+      .popup p {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        text-align: center;
+        transform: translate(-50%, -50%);
+      }
+
+      @keyframes flash {
+        0% {
+          background-color: gold;
+        }
+        50% {
+          background-color: red;
+        }
+        100% {
+          background-color: green;
+        }
+      }
+
+      @keyframes flashZoom {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
+          background-color: gold;
+        }
+        25% {
+          transform: translate(-50%, -50%) scale(1.2);
+          opacity: 1;
+          background-color: red;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+          background-color: green;
+        }
+        75% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+          background-color: gold;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
+          background-color: gold;
+        }
+      }
+
+      #myElement {
+        transition: transform 1s ease-in-out;
+      }
+
+      @font-face {
+        font-family: myFirstFont;
+        src: url(BetonCondensedBQ-Bold.otf);
+        font-display: block; /* or block */
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-image: var(--theme-gradient), var(--theme-image);  
+        background-blend-mode: overlay;
+        background-color: rgba(240, 240, 240, 0.1);
+        background-repeat: no-repeat, repeat;
+        background-size: cover;
+      }
+  
+      #leftbox {
+        float: left;
+        /*background: Red;*/
+        width: 50%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #middlebox {
+        float: left;
+        /*background: Green;*/
+        width: 25%;
+        height: 60%;
+      }
+
+      #rightbox {
+        float: right;
+        /*background: blue;*/
+        width: 25%;
+        height: 100%;
+      }
+
+      .buttonbox {
+        background-color: #00000055;
+        padding: 20px;
+        margin: 20px;
+      }
+      input {
+        padding: 10px;
+      }
+
+      .buttonbox > * {
+        margin: 10px; /* Add 10px margin around each element */
+      }
+
+      #particles-js {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+
+        z-index: -1;
+      }
+    </style>
+    <link rel="stylesheet" href="buttons.css" />
+    <link rel="stylesheet" href="style/debug.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.js"></script>
+    <script src="members.js"></script>
+    <script src="wheel.js"></script>
+    <script src="songs.js"></script>
+    <script src="roller.js"></script>
+    <script src="choices.js"></script>
+    
+    <script src="particles.min.js"></script>
+    <script src="particle/script.js"></script>
+
+    <script src="script/color.js"></script>
+
+    <script src="theme/theme.js"></script>
+    <link id="theme-link" rel="stylesheet" href="will_be_replaced_on_load" />
+
+    <link rel="stylesheet" href="style/theme.css">
+    <link rel="stylesheet" href="timer/timer.css">
+    <link rel="stylesheet" href="singers/singers.css">
+
+  </head>
+
+  <body onload="setup()">
+<div id="debug" class="debug-closed">
+  <button id="debug-toggle" onclick="toggleDebug()">[ + ] SHOW DEBUG</button>
+  
+  <div id="debug-content">
+    <script>
+      var triangle = null;
+      var wheelArrow = null;
+      
+      function toggleDebug() {
+        const debugDiv = document.getElementById('debug');
+        const btn = document.getElementById('debug-toggle');
+        
+        // Check current state and swap
+        if (debugDiv.classList.contains('debug-closed')) {
+          debugDiv.classList.replace('debug-closed', 'debug-open');
+          btn.innerHTML = "[ – ] HIDE DEBUG";
+        } else {
+          debugDiv.classList.replace('debug-open', 'debug-closed');
+          btn.innerHTML = "[ + ] SHOW DEBUG";
+        }
+      }
+
+      function switchTheme(){
+        changeTheme(); 
+        initParticles(); 
+        document.getElementById("theme-h").innerHTML = themeSelected.name.toUpperCase();
+        roller.update(themeSelected.songs);
+        roller.init();
+        
+        let primaryColor = themeSelected.wheelPrimarycolor;
+        wheel1.theme(primaryColor);
+        roller.theme(primaryColor);
+        choices.theme(primaryColor);
+
+        if(triangle != null){
+          triangle.set({
+            fill: adjustColor(primaryColor, 100),
+            dirty: true
+          });
+        }
+
+        if(wheelArrow != null){
+          wheelArrow.requestRenderAll();
+        }
+      }
+    </script>
+
+    <label>Select Theme:</label>
+    <select id="themeSelector" onchange="switchTheme()">
+      <option value="default">Default</option>
+      <option value="christmas">Christmas</option>
+      <option value="90s">90's</option>
+      <option value="80s">80's</option>
+      <option value="rock_metal" selected>Rock & Metal</option>
+    </select>
+
+    <label style="margin-top:10px;">Timer:</label>
+    <input id="timerSelector" value="100" style="width: 50px;" oninput="changeTimer()"/>
+    <script>
+      function changeTimer(){
+          START_TIME = Number(document.getElementById("timerSelector").value);
+          resetTimer();
+      }
+    </script>
+
+<button onclick="openSingerModal(handleSingerUpdate)">
+    🎤 MANAGE SINGERS
+</button>
+<script>
+  function handleSingerUpdate(singers) {
+    console.log("The modal closed! Here are the current singers:", singers);
+    // You can now update your wheel or other page variables here
+
+
+    wheel1.update(singers);
+    wheel1.init();
+}
+</script>
+
+</div>
+
+
+</div>
+<script>
+  window.addEventListener('load', () => {
+    setTimeout(() => { switchTheme(); }, 0);
+  });
+</script>
+
+    <div class="theme-header">
+      <h1 id="theme-h">HAPPY NEW YEAR!</h1>
+    </div>
+
+    <div class="theme-timer">
+        <h2 id="countdown-display"></h2>
+    </div>
+    <script src="timer/timer.js"></script>
+    <script>
+        function handleTimeUp() {
+            const selector = document.getElementById('themeSelector');
+    
+    if (selector && selector.options.length > 0) {
+        // Generate a random number between 0 and the number of options
+        const randomIndex = Math.floor(Math.random() * selector.options.length);
+        
+        // Update the dropdown to the new index
+        selector.selectedIndex = randomIndex;
+
+        // MANUALLY TRIGGER THE 'CHANGE' EVENT
+        // This is important because changing the index via JS 
+        // doesn't naturally trigger your "onchange" functions.
+        selector.dispatchEvent(new Event('change'));
+        
+        console.log("Randomly selected theme:", selector.options[randomIndex].text);
+    }
+        }
+        // Set the callback
+        setTimerCallback(handleTimeUp);
+    </script>
+
+    <script src="singers/singers.js"></script>
+
+<div id="singerOverlay" class="singer-overlay">
+  <div class="singer-window">
+    <div class="singer-header">
+      <strong>SINGER LINEUP</strong>
+      <button onclick="closeSingerModal()">&times;</button>
+    </div>
+    <div class="singer-body">
+      <div style="display:flex; gap:5px;">
+        <input id="singerInput" type="text" placeholder="Name...">
+        <button onclick="addSingerToList()">ADD</button>
+      </div>
+      <ul id="displayList"></ul>
+      <button onclick="clearList()" class="danger-btn">CLEAR ALL</button>
+    </div>
+  </div>
+</div>
+
+    <div id="particles-js"></div>
+
+    <div id="leftbox" style="position: relative">
+      <canvas
+        id="wheelCanvas"
+        style="transition: transform 1s ease-in-out"
+      ></canvas>
+      <canvas
+        id="wheelArrow"
+        style="left: 0; top: 0; position: absolute"
+      ></canvas>
+    </div>
+    <div id="middlebox">
+      <canvas id="namesCanvas"></canvas>
+      <div class="buttonbox">
+        <button
+          id="spinSingerButton"
+          class="button-19"
+          role="button"
+          onclick="spinSinger()"
+        >
+          SPIN SINGER
+        </button>
+        <button
+          id="rollArtistButton"
+          class="button-19"
+          role="button"
+          onclick="rollArtist()"
+        >
+          ROLL ARTIST
+        </button>
+        <button
+          id="resetSingersButton"
+          class="button-19"
+          role="button"
+          onclick="resetSingers()"
+        >
+          RESET SINGERS
+        </button>
+        <button
+          id="resetArtistButton"
+          class="button-19"
+          role="button"
+          onclick="resetArtist()"
+        >
+          RESET ARTIST
+        </button>
+      </div>
+    </div>
+    <div id="rightbox">
+      <canvas id="rollerCanvas" style="background-color: black"></canvas>
+    </div>
+
+    <script>
+      var wheel1 = null;
+
+      var singerEnabled = true;
+      var artistEnabled = true;
+
+      function enableArtist(enabled) {
+        artistEnabled = enabled;
+
+        if(artistEnabled && singerEnabled)
+        {
+          resumeTimer();
+        } else {
+          pauseTimer();
+        }
+        document.getElementById("rollArtistButton").disabled = !enabled;
+        document.getElementById("resetArtistButton").disabled = !enabled;
+      }
+
+      function enableSinger(enabled) {
+        singerEnabled = enabled;
+
+        if(artistEnabled && singerEnabled)
+        {
+          resumeTimer();
+        } else {
+          pauseTimer();
+        }
+
+        document.getElementById("spinSingerButton").disabled = !enabled;
+        document.getElementById("resetSingersButton").disabled = !enabled;
+      }
+
+      function resetArtist() {
+        choices.resetArtist();
+      }
+
+      function resetSingers() {
+        choices.resetSingers();
+      }
+
+      function rollArtist() {
+        const duration = 2 + Math.random() * 5;
+
+        const clipDuration = 2.759;
+
+        var audio = new Audio("sound/spin.wav");
+        const playbackRate = duration / duration;
+        audio.playbackRate = playbackRate;
+        audio.play();
+
+        enableArtist(false);
+        roller.roll(duration * 1000, (value) => {
+          var audio2 = new Audio("sound/success.mp3");
+          audio2.play();
+
+          const popup = document.getElementById("myPopup2");
+          const popupText = document.getElementById("popupText2");
+
+          popupText.innerHTML = value;
+
+          popup.style.display = "block"; // Show the popup
+
+          setTimeout(() => {
+            popup.style.display = "none"; // Hide the popup after 5 seconds
+          }, 5000);
+
+          choices.addArtist(value);
+          enableArtist(true);
+        });
+      }
+      function spinSinger() {
+        const clipDuration = 2.759;
+
+        const rotationSeconds = 2 + Math.random() * 5;
+
+        var audio = new Audio("sound/spin.wav");
+        const playbackRate = clipDuration / rotationSeconds;
+        audio.playbackRate = playbackRate;
+        audio.play();
+
+        enableSinger(false);
+        wheel1.rotate(rotationSeconds, (value) => {
+          var audio2 = new Audio("sound/success.mp3");
+          audio2.play();
+
+          const popup = document.getElementById("myPopup");
+          const popupText = document.getElementById("popupText");
+
+          popupText.innerHTML = value;
+
+          popup.style.display = "block"; // Show the popup
+
+          setTimeout(() => {
+            popup.style.display = "none"; // Hide the popup after 5 seconds
+          }, 5000);
+
+          choices.addSinger(value);
+          enableSinger(true);
+        });
+      }
+      let hasUserInteracted = false;
+      let curmusix = "myAudio1";
+      function setup() {
+        //https://freesound.org
+        document.addEventListener("click", () => {
+          if (!hasUserInteracted) {
+            hasUserInteracted = true;
+            document.getElementById(curmusix).volume = 0.1;
+
+            document.getElementById(curmusix).play();
+          }
+        });
+
+        document.addEventListener("visibilitychange", function () {
+          let index = -1;
+          let num = Math.random();
+          if (num < 0.33) {
+            index = 1;
+          } else if (num < 0.66) {
+            index = 2;
+          } else {
+            index = 3;
+          }
+
+          console.log("play music: " + index);
+
+          let music = "myAudio" + index;
+
+          document.getElementById(music).volume = 0.1;
+          document.getElementById(curmusix).volume = 0.1;
+          if (document.visibilityState === "visible") {
+            document.getElementById(curmusix).pause();
+            document.getElementById(music).play();
+
+            curmusix = music;
+          } else {
+            document.getElementById(curmusix).pause();
+          }
+        });
+        var wheelCanvas = new fabric.StaticCanvas("wheelCanvas");
+        wheelCanvas.setWidth(document.getElementById("leftbox").offsetWidth);
+        wheelCanvas.setHeight(document.getElementById("leftbox").offsetHeight);
+
+        wheel1 = new Wheel("wheelCanvas", wheelCanvas, []);
+        wheel1.init();
+
+        initSingers(handleSingerUpdate);
+
+
+        let rollerCanvas = new fabric.StaticCanvas("rollerCanvas");
+        rollerCanvas.setWidth(document.getElementById("rightbox").offsetWidth);
+        rollerCanvas.setHeight(
+          document.getElementById("rightbox").offsetHeight
+        );
+
+        roller = new Roller("rollerCanvas", rollerCanvas, []);
+        roller.init();
+
+        var namesCanvas = new fabric.StaticCanvas("namesCanvas");
+        namesCanvas.setWidth(document.getElementById("middlebox").offsetWidth);
+        namesCanvas.setHeight(
+          document.getElementById("middlebox").offsetHeight
+        );
+
+        choices = new Choices("namesCanvas", namesCanvas);
+        choices.init();
+
+        // arrow needs to be outside of wheel because of nasty full canvas rotation
+        wheelArrow = new fabric.StaticCanvas("wheelArrow");
+        wheelArrow.setWidth(document.getElementById("leftbox").offsetWidth);
+        wheelArrow.setHeight(document.getElementById("leftbox").offsetHeight);
+
+        const triangleHeight = 100;
+        const triangleWidth = 100;
+
+        const edgeThick = 4;
+
+        triangle = new fabric.Triangle({
+          width: triangleWidth - 5,
+          height: triangleHeight,
+          fill: "#FFAA1D",
+          left: wheelArrow.width - triangleWidth - edgeThick,
+          top: (wheelArrow.height - triangleHeight) / 2,
+          stroke: "black",
+          strokeWidth: edgeThick,
+        });
+
+        triangle.rotate(-90);
+
+        wheelArrow.add(triangle);
+      }
+    </script>
+
+    
+    </script>
+    <div class="popup" id="myPopup">
+      <p id="popupText">Merry Christmas!</p>
+    </div>
+
+    <div class="popup" id="myPopup2">
+      <p id="popupText2">Merry Christmas!</p>
+    </div>
+
+    <audio id="myAudio1" autoplay loop>
+      <source src="music/back1.mp3" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+
+    <audio id="myAudio2" autoplay loop>
+      <source src="music/back2.wav" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+
+    <audio id="myAudio3" autoplay loop>
+      <source src="music/back3.wav" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+  </body>
+</html>

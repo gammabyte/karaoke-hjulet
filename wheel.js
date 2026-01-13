@@ -1,0 +1,292 @@
+function adjustColor(hex, amount) {
+    hex = hex.replace(/^#/, '');
+
+    if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+    }
+
+    // Convert hex to decimal integers
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    // Add the amount to each channel (positive to lighten, negative to darken)
+    // We use Math.max(0, ...) and Math.min(255, ...) to stay in bounds
+    r = Math.max(0, Math.min(255, r + amount));
+    g = Math.max(0, Math.min(255, g + amount));
+    b = Math.max(0, Math.min(255, b + amount));
+
+    // Convert back to hex and pad with zeros
+    const getHex = (n) => n.toString(16).padStart(2, '0');
+
+    return `#${getHex(r)}${getHex(g)}${getHex(b)}`;
+}
+
+class Wheel {
+  constructor(container, canvas, entries) {
+    this.container = container;
+    this.canvas = canvas;
+    this.entries = entries;
+    this.rotation = 0;
+  }
+
+  theme(primaryColor) {
+    this.frame.set('stroke', primaryColor); // You can use CSS variables here too!
+    this.middle.set('fill', primaryColor)
+
+    this.middle.set('stroke', adjustColor(primaryColor, 100))
+
+    this.center.set('stroke', adjustColor(primaryColor, -40));
+    this.center.set('fill', adjustColor(primaryColor, -80));
+
+    this.canvas.renderAll();
+
+  }
+
+  update(entries) {
+    this.entries = entries;
+    this.canvas.clear();
+  }
+
+  init() {
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+
+    const padding = 40;
+
+    const radius =
+      Math.min(this.canvas.width, this.canvas.height) / 2 - padding;
+
+    const step = (Math.PI * 2) / this.entries.length;
+    for (let i = 0; i < this.entries.length; ++i) {
+      
+      /*  const angle1 = i * step;
+      const angle2 = (i + 1) * step;
+      let p1 = { x: cx, y: cy };
+      let p2 = {
+        x: cx + Math.cos(angle1) * radius,
+        y: cy + Math.sin(angle1) * radius,
+      };
+      let p3 = {
+        x: cx + Math.cos(angle2) * radius,
+        y: cy + Math.sin(angle2) * radius,
+      };
+
+      let color = colors[i % colors.length];
+
+      var polygon = new fabric.Polygon([p1, p2, p3], {
+        fill: color,
+        stroke: "black",
+        strokeWidth: 2,
+      });
+      */
+     const angle1 = i * step;
+const angle2 = (i + 1) * step;
+
+// Points for the path
+const p2 = {
+  x: cx + Math.cos(angle1) * radius,
+  y: cy + Math.sin(angle1) * radius,
+};
+const p3 = {
+  x: cx + Math.cos(angle2) * radius,
+  y: cy + Math.sin(angle2) * radius,
+};
+
+// SVG Path Data
+// M: Move to center
+// L: Line to start of arc
+// A: Arc (rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endX, endY)
+const pathData = `
+  M ${cx} ${cy}
+  L ${p2.x} ${p2.y}
+  A ${radius} ${radius} 0 0 1 ${p3.x} ${p3.y}
+  Z
+`;
+
+const sector = new fabric.Path(pathData, {
+  fill: colors[i % colors.length],
+  stroke: "black",
+  strokeWidth: 2,
+  originX: 'center', // Helpful for centering the wheel
+  originY: 'center'
+});
+
+      const textAngle = (angle1 + angle2) / 2;
+      const textDist = radius - 30;
+      const textValue = this.entries[i] + "";
+
+      var text = new fabric.Text(textValue, {
+        left: cx + Math.cos(textAngle) * textDist,
+        top: cy + Math.sin(textAngle) * textDist,
+        fontFamily: "Verdana",
+        fontSize: 48,
+        fontWeight: "bold",
+        fill: "black",
+        angle: this.radiansToDegrees(textAngle),
+        originY: "center",
+        originX: "right",
+        stroke: "white",
+        strokeWidth: 1,
+      });
+
+      //this.canvas.add(polygon, text);
+      this.canvas.add(sector, text);
+
+      //document.getElementById(this.container).style.transform = 'rotate(90deg)';
+    }
+
+    var circle = new fabric.Circle({
+      left: cx,
+      top: cy,
+      radius: radius,
+      originY: "center",
+      originX: "center",
+      fill: "transparent",
+      stroke: "black",
+      strokeWidth: 40,
+    });
+
+    var circle2 = new fabric.Circle({
+      left: cx,
+      top: cy,
+      radius: radius,
+      originY: "center",
+      originX: "center",
+      fill: "transparent",
+      stroke: "gold",
+      strokeWidth: 30,
+    });
+
+    this.frame = circle2; // mainly just for setting stroke when updating theme
+
+    var circle3 = new fabric.Circle({
+      left: cx,
+      top: cy,
+      radius: radius - 8,
+      originY: "center",
+      originX: "center",
+      fill: "transparent",
+      stroke: "white",
+      strokeWidth: 8,
+      strokeDashArray: [10, 5],
+    });
+
+    this.canvas.add(circle, circle2, circle3);
+
+    const numBulbs = 40;
+    const sliceBulb = (Math.PI * 2) / numBulbs;
+    for (let i = 0; i < numBulbs; ++i) {
+      let px = cx + Math.cos(i * sliceBulb) * radius;
+      let py = cy + Math.sin(i * sliceBulb) * radius;
+
+      let color = colors[i % colors.length];
+      let b1 = this.bulb(color, 10);
+      b1.left = px;
+      b1.top = py;
+      this.canvas.add(b1);
+    }
+
+    let midbul = new fabric.Circle({
+      left: cx,
+      top: cy,
+      radius: 60,
+      originY: "center",
+      originX: "center",
+      fill: "#FFD700",
+      stroke: "#FFEE99",
+      strokeWidth: 5,
+    });
+
+    this.middle = midbul; // used for setting primary color
+
+    this.canvas.add(midbul);
+
+    let midbul2 = new fabric.Circle({
+      left: cx,
+      top: cy,
+      radius: 30,
+      originY: "center",
+      originX: "center",
+      fill: "#FFAA1D",
+      stroke: "#FFBB1D",
+      strokeWidth: 5,
+    });
+
+    this.center = midbul2; // used for setting color
+
+    this.canvas.add(midbul2);
+  }
+
+  bulb(color, size) {
+    var circle3 = new fabric.Circle({
+      radius: size,
+      originY: "center",
+      originX: "center",
+      fill: color,
+      stroke: "white",
+      strokeWidth: 2,
+    });
+
+    var cir2 = new fabric.Circle({
+      radius: 3,
+      left: 2,
+      top: 2,
+      originY: "center",
+      originX: "center",
+      fill: "white",
+    });
+
+    var group = new fabric.Group([circle3, cir2]);
+    group.set({
+      originX: "center",
+      originY: "center",
+    });
+    return group;
+  }
+
+  radiansToDegrees(radians) {
+    return radians * (180 / Math.PI);
+  }
+  rotate(rotationSeconds, callback) {
+    this.rotation += 2*360 + Math.random() * 4 * 360;
+
+    let thething = document.getElementById(this.container);
+
+    thething.style.cssText = `transition: transform ${rotationSeconds}s ease-in-out; transform: rotate(${this.rotation}deg);`;
+
+    let handler = () => {
+      thething.removeEventListener("transitionend", handler);
+
+      let slice = 360 / this.entries.length;
+      let onecircle = this.rotation % 360;
+      let index = onecircle / slice;
+
+      index = (this.entries.length - index) % this.entries.length;
+
+      console.log(
+        "Rotation animation completed!" + onecircle + " --- index: " + index
+
+        // decide where the arrow needs to be and map rotation to index
+      );
+
+      let aname = this.entries[Math.floor(index)];
+      callback(aname);
+    };
+
+    thething.addEventListener("transitionend", handler);
+  }
+}
+
+const colors = [
+  "#FF0000", // Red (Primary)
+  "#00FF00", // Green (Primary)
+  "#0000FF", // Blue (Primary)
+  "#FFFF00", // Yellow (Secondary)
+  "#FFA500", // Orange (Secondary)
+  "#FF00FF", // Magenta (Secondary)
+  "#00FFFF", // Cyan (Secondary)
+  "#800080", // Purple (Tertiary)
+  "#808000", // Olive (Tertiary)
+  "#008080", // Teal (Tertiary)
+];

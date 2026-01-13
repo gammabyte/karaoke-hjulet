@@ -1,0 +1,13 @@
+:root {
+    /* "Stage Lights" - Deep Black to a dark, moody crimson */
+    --theme-gradient: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(139, 0, 0, 0.4) 100%);
+    
+    /* Suggestion: Brushed metal, diamond plate, or a dark brick wall texture */
+    --theme-image: url("theme/rock_metal/background.jpeg"); 
+    
+    /* "Gibson Red" or "Corroded Copper" for buttons */
+    --button-color: #9b0000; 
+    
+    /* A very dark, heavy shadow to give the buttons weight */
+    --button-shadow: #3d0000; 
+}

@@ -1,0 +1,6 @@
+:root {
+    --theme-gradient: linear-gradient(to right, rgba(0, 255, 0, 0.3) 0 100%);
+    --theme-image: url("theme/christmas/background.webp");
+    --button-color: #00a639;
+    --button-shadow: #016000;
+}

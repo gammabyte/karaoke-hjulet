@@ -1,0 +1,54 @@
+.theme-header {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    z-index: 9999;
+    pointer-events: none; 
+}
+
+.theme-header h1 {
+    margin: 0;
+    position: absolute;
+    top: 30px;
+    left: 200px;
+    
+    /* THE FIXES */
+    width: max-content;    /* Tells the browser: 'be as wide as the text is' */
+    white-space: nowrap;   /* Prevents the text from jumping to a new line */
+    display: block;        /* Ensures it behaves as a full layout element */
+
+    /* Your Visuals */
+    font-size: 6rem;
+    font-family: 'Impact', sans-serif;
+    color: #fff;
+    -webkit-text-stroke: 3px var(--button-color);
+    text-shadow: 0 0 10px rgba(155, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 1);
+    
+    /* Your Animations */
+    animation: 
+        rockSway 4s ease-in-out infinite alternate,
+        flicker 3s linear infinite;
+}
+
+/* Keyframes for the swaying motion */
+@keyframes rockSway {
+    0% {
+        transform: translateX(0) rotate(0deg);
+    }
+    50% {
+        /* Move 15px to the right and add a tiny tilt */
+        transform: translateX(15px) rotate(1deg);
+    }
+    100% {
+        /* Back to original (handled by 'alternate' in animation property) */
+        transform: translateX(0) rotate(0deg);
+    }
+}
+
+/* Add this to the animation property: flicker 3s infinite */
+@keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; text-shadow: 0 0 30px var(--button-color); }
+}

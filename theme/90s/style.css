@@ -1,0 +1,13 @@
+:root {
+    /* Hot Pink to Cyan gradient - classic 90s transition */
+    --theme-gradient: linear-gradient(135deg, rgba(255, 0, 255, 0.4) 0%, rgba(0, 242, 255, 0.4) 100%);
+    
+    /* Suggestion: Use a pattern like zig-zags, cassettes, or a geometric grid */
+    --theme-image: url("theme/90s/background.jpg"); 
+    
+    /* "Nickelodeon" Orange or "MTV" Yellow for buttons */
+    --button-color: #ff9900; 
+    
+    /* Using your adjustColor logic, we want a very harsh, high-contrast shadow */
+    --button-shadow: #c47500; 
+}

@@ -1,0 +1,13 @@
+:root {
+    /* "Night Drive" - Deep Navy to a very dark Magenta */
+    --theme-gradient: linear-gradient(180deg, rgba(20, 20, 47, 0.7) 0%, rgba(100, 0, 100, 0.5) 100%);
+    
+    /* Suggestion: Use a "Zebra" print, a "Leopard" print, or "Chrome" texture */
+    --theme-image: url("theme/80s/background.jpg"); 
+    
+    /* "Electric Yellow" or "Safety Orange" for buttons */
+    --button-color: #f3f315; 
+    
+    /* A very dark, solid black shadow for a "sticker" look */
+    --button-shadow: #000000; 
+}

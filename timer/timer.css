@@ -1,0 +1,46 @@
+/* Container for the floating timer */
+.theme-timer {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 9999;
+    pointer-events: none; /* Allows clicking things "under" the timer */
+}
+
+#countdown-display {
+    margin: 0;
+    font-size: 4rem;
+    font-family: 'Impact', sans-serif;
+    color: #fff;
+    -webkit-text-stroke: 2px var(--button-color, #ff0000);
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+    transition: font-size 0.05s ease; /* Smooths the glitching a bit */
+    
+    /* Default Rock Sway */
+    animation: rockSway 5s ease-in-out infinite alternate;
+}
+
+/* Erratic Shake & Flicker Animation */
+@keyframes erraticShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-3px, 2px) rotate(-2deg); }
+  50% { transform: translate(3px, -1px) rotate(2deg); }
+  75% { transform: translate(-2px, -3px) rotate(-1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.timer-danger {
+    color: #ff0000 !important;
+    -webkit-text-stroke: 2px #ffffff !important;
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    /* Overrides default animation with violent shaking and strobing */
+    animation: 
+        erraticShake 0.08s infinite !important, 
+        flicker 0.1s infinite !important;
+}
+
+/* Existing Sway for context */
+@keyframes rockSway {
+    from { transform: rotate(-3deg); }
+    to { transform: rotate(3deg); }
+}
