@@ -31,6 +31,7 @@ class Wheel {
   }
 
   theme(primaryColor) {
+    this.primaryColor = primaryColor;
     this.frame.set('stroke', primaryColor); // You can use CSS variables here too!
     this.middle.set('fill', primaryColor)
 
@@ -44,11 +45,20 @@ class Wheel {
   }
 
   update(entries) {
-    this.entries = entries;
+    this.entries = [...entries];
     this.canvas.clear();
   }
 
+  resize(width, height) {
+    this.canvas.setDimensions({ width, height });
+    this.init();
+    if (this.primaryColor) {
+      this.theme(this.primaryColor);
+    }
+  }
+
   init() {
+    this.canvas.clear();
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
 

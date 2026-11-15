@@ -12,18 +12,29 @@ class Choices {
 
     this.currentArtistBox = null;
     this.currentSingers = [];
+    this.artistName = null;
+    this.singerBoxes = [];
   }
 
 
   theme(primaryColor) {
+    this.primaryColor = primaryColor;
     this.singersbox.set('fill', primaryColor);
     this.artistbox.set('fill', primaryColor);
 
     this.canvas.renderAll();
   }
 
+  resize(width, height) {
+    this.canvas.setDimensions({ width, height });
+    this.init();
+  }
 
   init() {
+    this.canvas.clear();
+    this.singerBoxes = [];
+    this.currentArtistBox = null;
+
     let artistbox = new fabric.Rect({
       left: this.pad,
       top: this.pad,
@@ -121,31 +132,33 @@ class Choices {
     });
 
     this.canvas.add(artistbox, artixttitletext, singersbox, singerstitletext);
+
+    if (this.primaryColor) {
+      this.theme(this.primaryColor);
+    }
+    if (this.artistName !== null) {
+      this.drawArtist(this.artistName);
+    }
+    this.currentSingers.forEach((singer, index) => this.drawSinger(singer, index));
   }
 
   addSinger(singer) {
-    let newSinger = this.createEntry(singer);
-    newSinger.top =
-      this.singersOffset +
-      this.entryheight +
-      10 +
-      this.currentSingers.length * this.entryheight;
-
-    this.currentSingers.push(newSinger);
-
-    this.canvas.add(newSinger);
+    this.currentSingers.push(singer);
+    this.drawSinger(singer, this.currentSingers.length - 1);
   }
 
   resetArtist() {
-    if (this.currentArtistBox != null) {
+    this.artistName = null;
+    if (this.currentArtistBox !== null) {
       this.canvas.remove(this.currentArtistBox);
       this.currentArtistBox = null;
     }
   }
 
   resetSingers() {
-    this.currentSingers.forEach((x) => this.canvas.remove(x));
+    this.singerBoxes.forEach((box) => this.canvas.remove(box));
     this.currentSingers = [];
+    this.singerBoxes = [];
   }
 
   addArtist(artist) {
@@ -154,10 +167,27 @@ class Choices {
       this.currentArtistBox = null;
     }
 
+    this.artistName = artist;
+    this.drawArtist(artist);
+  }
+
+  drawArtist(artist) {
     this.currentArtistBox = this.createEntry(artist);
     this.currentArtistBox.top = this.entryheight + this.pad + 10;
 
     this.canvas.add(this.currentArtistBox);
+  }
+
+  drawSinger(singer, index) {
+    let newSinger = this.createEntry(singer);
+    newSinger.top =
+      this.singersOffset +
+      this.entryheight +
+      10 +
+      index * this.entryheight;
+
+    this.singerBoxes.push(newSinger);
+    this.canvas.add(newSinger);
   }
 
   createEntry(name) {

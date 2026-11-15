@@ -56,7 +56,9 @@
 }
 
 .button-19:disabled {
-  cursor: auto;
+  cursor: not-allowed;
+  filter: grayscale(1) brightness(.7);
+  opacity: .7;
 }
 
 .button-19:active {

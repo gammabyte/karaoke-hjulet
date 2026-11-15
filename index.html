@@ -210,6 +210,105 @@
           wheelArrow.requestRenderAll();
         }
       }
+
+      let pendingCanvasResize = false;
+      let canvasResizeTimeout = null;
+      let resizeAfterSpinTimeout = null;
+      let isWaitingForResize = false;
+
+      function updateSpinButtons() {
+        const singerButton = document.getElementById("spinSingerButton");
+        const artistButton = document.getElementById("rollArtistButton");
+        if (!singerButton || !artistButton) return;
+
+        singerButton.disabled = !singerEnabled || isWaitingForResize;
+        singerButton.textContent = isWaitingForResize
+          ? "WAITING FOR RESIZE..."
+          : singerEnabled
+            ? "SPIN SINGER"
+            : "SPINNING...";
+
+        artistButton.disabled = !artistEnabled || isWaitingForResize;
+        artistButton.textContent = isWaitingForResize
+          ? "WAITING FOR RESIZE..."
+          : artistEnabled
+            ? "ROLL ARTIST"
+            : "ROLLING...";
+      }
+
+      function positionWheelArrow() {
+        if (!wheelArrow || !triangle) return;
+
+        const radius = Math.max(
+          0,
+          Math.min(wheelArrow.width, wheelArrow.height) / 2 - 40
+        );
+        triangle.set({
+          left: wheelArrow.width / 2 + radius,
+          top: wheelArrow.height / 2
+        });
+        triangle.setCoords();
+        wheelArrow.requestRenderAll();
+      }
+
+      function resizeCanvases() {
+        if (!wheel1 || !roller || !choices) return;
+        if (!singerEnabled || !artistEnabled) {
+          pendingCanvasResize = true;
+          isWaitingForResize = true;
+          updateSpinButtons();
+          return;
+        }
+        if (resizeAfterSpinTimeout !== null) {
+          pendingCanvasResize = true;
+          return;
+        }
+
+        const wasWaitingForResize = isWaitingForResize;
+        pendingCanvasResize = false;
+        isWaitingForResize = false;
+        wheel1.resize(
+          document.getElementById("leftbox").offsetWidth,
+          document.getElementById("leftbox").offsetHeight
+        );
+        roller.resize(
+          document.getElementById("rightbox").offsetWidth,
+          document.getElementById("rightbox").offsetHeight
+        );
+        choices.resize(
+          document.getElementById("middlebox").offsetWidth,
+          document.getElementById("middlebox").offsetHeight
+        );
+
+        if (wheelArrow && triangle) {
+          wheelArrow.setDimensions({
+            width: document.getElementById("leftbox").offsetWidth,
+            height: document.getElementById("leftbox").offsetHeight
+          });
+          positionWheelArrow();
+        }
+        updateSpinButtons();
+        if (wasWaitingForResize && singerEnabled && artistEnabled) {
+          resumeTimer();
+        }
+      }
+
+      function applyPendingCanvasResize() {
+        if (pendingCanvasResize && singerEnabled && artistEnabled) {
+          isWaitingForResize = true;
+          updateSpinButtons();
+          clearTimeout(resizeAfterSpinTimeout);
+          resizeAfterSpinTimeout = setTimeout(() => {
+            resizeAfterSpinTimeout = null;
+            resizeCanvases();
+          }, 3000);
+        }
+      }
+
+      window.addEventListener("resize", () => {
+        clearTimeout(canvasResizeTimeout);
+        canvasResizeTimeout = setTimeout(resizeCanvases, 100);
+      });
     </script>
 
     <label>Select Theme:</label>
@@ -366,27 +465,27 @@
       function enableArtist(enabled) {
         artistEnabled = enabled;
 
-        if(artistEnabled && singerEnabled)
+        if(artistEnabled && singerEnabled && !isWaitingForResize)
         {
           resumeTimer();
         } else {
           pauseTimer();
         }
-        document.getElementById("rollArtistButton").disabled = !enabled;
+        updateSpinButtons();
         document.getElementById("resetArtistButton").disabled = !enabled;
       }
 
       function enableSinger(enabled) {
         singerEnabled = enabled;
 
-        if(artistEnabled && singerEnabled)
+        if(artistEnabled && singerEnabled && !isWaitingForResize)
         {
           resumeTimer();
         } else {
           pauseTimer();
         }
 
-        document.getElementById("spinSingerButton").disabled = !enabled;
+        updateSpinButtons();
         document.getElementById("resetSingersButton").disabled = !enabled;
       }
 
@@ -426,6 +525,7 @@
 
           choices.addArtist(value);
           enableArtist(true);
+          applyPendingCanvasResize();
         });
       }
       function spinSinger() {
@@ -456,6 +556,7 @@
 
           choices.addSinger(value);
           enableSinger(true);
+          applyPendingCanvasResize();
         });
       }
       let hasUserInteracted = false;
@@ -538,6 +639,8 @@
         triangle = new fabric.Triangle({
           width: triangleWidth - 5,
           height: triangleHeight,
+          originX: "center",
+          originY: "center",
           fill: "#FFAA1D",
           left: wheelArrow.width - triangleWidth - edgeThick,
           top: (wheelArrow.height - triangleHeight) / 2,
@@ -548,6 +651,7 @@
         triangle.rotate(-90);
 
         wheelArrow.add(triangle);
+        positionWheelArrow();
       }
     </script>
 

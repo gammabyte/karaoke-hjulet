@@ -40,8 +40,11 @@ class Roller {
   }
   
   update(entries) {
-    // undefined guard
-    if (!entries) return;
+    if (!entries) {
+      this.entries = [];
+    } else {
+      this.entries = [...entries];
+    }
 
     this.canvas.clear();
     this.rotation = 0;
@@ -52,9 +55,7 @@ class Roller {
     //this.time = 0;
     this.rects = [];
 
-    this.entries = entries;
-    // shuffle the entries
-    const shuffle = (array) => { 
+    const shuffle = (array) => {
       for (let i = array.length - 1; i > 0; i--) { 
         const j = Math.floor(Math.random() * (i + 1)); 
         [array[i], array[j]] = [array[j], array[i]]; 
@@ -62,7 +63,16 @@ class Roller {
       return array; 
     };
   
-    this.entries = shuffle(this.entries)
+    this.entries = shuffle(this.entries);
+  }
+
+  resize(width, height) {
+    this.canvas.setDimensions({ width, height });
+    this.boxwidth = width;
+    this.init();
+    if (this.primaryColor) {
+      this.theme(this.primaryColor);
+    }
   }
 
   createbigbox(ystart) {
@@ -101,6 +111,7 @@ class Roller {
   }
 
   theme(primaryColor) {
+    this.primaryColor = primaryColor;
     this.edge.set('stroke', primaryColor); // You can use CSS variables here too!
     this.triangle.set('fill', adjustColor(primaryColor, 100));
 
@@ -108,6 +119,9 @@ class Roller {
   }
 
   init() {
+    this.canvas.clear();
+    this.rects = [];
+    this.totalMove = 0;
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
     /*
@@ -211,11 +225,6 @@ class Roller {
       thegroup.push(bulb2);
     }
 
-    // the arrow pointing to the choice
-    var wheelArrow = new fabric.StaticCanvas("not_used");
-    wheelArrow.setWidth(document.getElementById("leftbox").offsetWidth);
-    wheelArrow.setHeight(document.getElementById("leftbox").offsetHeight);
-
     const triangleHeight = 100;
     const triangleWidth = 100;
     const triangleStroke = 4;
@@ -277,7 +286,7 @@ class Roller {
 
     this.totalMove += move;
 
-    let calledComplete = false;
+    let completedAnimations = 0;
 
     for (let i = 0; i < this.rects.length; ++i) {
       let rect = this.rects[i];
@@ -290,17 +299,17 @@ class Roller {
           easing: fabric.util.ease.easeInOutQuad,
           onChange: this.changeme(this.canvas, rect),
           onComplete: () => {
-            if (calledComplete) return;
+            completedAnimations++;
+            if (completedAnimations !== this.rects.length) return;
 
-            const correction = this.canvas.height / this.boxheight / 2;
-
-            let hit = this.totalMove % fullsize;
-            let index = hit / this.boxheight;
-            let realindex = -Math.floor(index) + Math.ceil(+correction); //+ 9;
-            realindex = (this.entries.length + realindex) % this.entries.length;
+            const hit = this.totalMove % fullsize;
+            const rowAtArrow = Math.floor(
+              (this.canvas.height / 2 + 60 - hit) / this.boxheight
+            );
+            const realindex =
+              ((rowAtArrow % this.entries.length) + this.entries.length) %
+              this.entries.length;
             let artist = this.entries[realindex];
-
-            calledComplete = true;
 
             callback(artist);
           },
