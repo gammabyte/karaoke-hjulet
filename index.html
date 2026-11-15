@@ -243,8 +243,14 @@
           0,
           Math.min(wheelArrow.width, wheelArrow.height) / 2 - 40
         );
+        const arrowCenterX = Math.min(
+          wheelArrow.width / 2 + radius,
+          wheelArrow.width -
+            triangle.height / 2 -
+            triangle.strokeWidth
+        );
         triangle.set({
-          left: wheelArrow.width / 2 + radius,
+          left: arrowCenterX,
           top: wheelArrow.height / 2
         });
         triangle.setCoords();
