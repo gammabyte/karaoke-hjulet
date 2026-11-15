@@ -143,8 +143,22 @@ class Choices {
   }
 
   addSinger(singer) {
+    if (this.currentSingers.length === 3) {
+      this.currentSingers.shift();
+      this.canvas.remove(this.singerBoxes.shift());
+      this.singerBoxes.forEach((box, index) => {
+        box.top =
+          this.singersOffset +
+          this.entryheight +
+          10 +
+          index * this.entryheight;
+        box.setCoords();
+      });
+    }
+
     this.currentSingers.push(singer);
     this.drawSinger(singer, this.currentSingers.length - 1);
+    this.canvas.renderAll();
   }
 
   resetArtist() {
