@@ -467,6 +467,8 @@
 
       var singerEnabled = true;
       var artistEnabled = true;
+      let singerPopupTimeout = null;
+      let artistPopupTimeout = null;
 
       function enableArtist(enabled) {
         artistEnabled = enabled;
@@ -521,11 +523,14 @@
           const popup = document.getElementById("myPopup2");
           const popupText = document.getElementById("popupText2");
 
+          clearTimeout(artistPopupTimeout);
           popupText.innerHTML = value;
 
-          popup.style.display = "block"; // Show the popup
+          popup.style.display = "none";
+          void popup.offsetWidth;
+          popup.style.display = "block";
 
-          setTimeout(() => {
+          artistPopupTimeout = setTimeout(() => {
             popup.style.display = "none"; // Hide the popup after 5 seconds
           }, 5000);
 
@@ -552,11 +557,14 @@
           const popup = document.getElementById("myPopup");
           const popupText = document.getElementById("popupText");
 
+          clearTimeout(singerPopupTimeout);
           popupText.innerHTML = value;
 
-          popup.style.display = "block"; // Show the popup
+          popup.style.display = "none";
+          void popup.offsetWidth;
+          popup.style.display = "block";
 
-          setTimeout(() => {
+          singerPopupTimeout = setTimeout(() => {
             popup.style.display = "none"; // Hide the popup after 5 seconds
           }, 5000);
 

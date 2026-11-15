@@ -262,11 +262,14 @@ const sector = new fabric.Path(pathData, {
     this.rotation += 2*360 + Math.random() * 4 * 360;
 
     let thething = document.getElementById(this.container);
+    let completed = false;
+    let fallbackTimeout;
 
-    thething.style.cssText = `transition: transform ${rotationSeconds}s ease-in-out; transform: rotate(${this.rotation}deg);`;
-
-    let handler = () => {
+    const finish = () => {
+      if (completed) return;
+      completed = true;
       thething.removeEventListener("transitionend", handler);
+      clearTimeout(fallbackTimeout);
 
       let slice = 360 / this.entries.length;
       let onecircle = this.rotation % 360;
@@ -284,7 +287,15 @@ const sector = new fabric.Path(pathData, {
       callback(aname);
     };
 
+    let handler = (event) => {
+      if (event.target === thething && event.propertyName === "transform") {
+        finish();
+      }
+    };
+
     thething.addEventListener("transitionend", handler);
+    thething.style.cssText = `transition: transform ${rotationSeconds}s ease-in-out; transform: rotate(${this.rotation}deg);`;
+    fallbackTimeout = setTimeout(finish, rotationSeconds * 1000 + 100);
   }
 }
 
