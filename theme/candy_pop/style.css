@@ -1,0 +1,6 @@
+:root {
+    --theme-gradient: linear-gradient(135deg, rgba(255, 117, 181, 0.5), rgba(255, 157, 61, 0.42), rgba(113, 227, 176, 0.5));
+    --theme-image: none;
+    --button-color: #ff75b5;
+    --button-shadow: #2b997f;
+}
