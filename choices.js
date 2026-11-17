@@ -37,7 +37,11 @@ class Choices {
   }
 
   isArtistBoxHit(event) {
-    if (!this.currentArtistBox || this.artistName === null) {
+    if (
+      !this.currentArtistBox ||
+      this.artistName === null ||
+      funArtistEntries.includes(this.artistName)
+    ) {
       return false;
     }
 
@@ -319,6 +323,10 @@ class Choices {
 }
 
 function openYoutubeKaraokeSearch(artist) {
+  if (funArtistEntries.includes(artist)) {
+    return;
+  }
+
   const query = encodeURIComponent(`${artist} karaoke`);
   window.open(
     `https://www.youtube.com/results?search_query=${query}`,

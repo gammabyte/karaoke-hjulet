@@ -21,6 +21,13 @@ function adjustColor(hex, amount) {
 
     return `#${getHex(r)}${getHex(g)}${getHex(b)}`;
 }
+
+const funArtistEntries = [
+  "🎤 FREE CHOICE 🎤",
+  "🥂 CHEERS! 🥂",
+  "🙌 AUDIENCE CHOICE 🙌",
+];
+
 class Roller {
   constructor(container, canvas, entries) {
     this.container = container;
@@ -82,8 +89,9 @@ class Roller {
     }
 
     const index = this.rects.findIndex(
-      (row) =>
+      (row, index) =>
         this.canvas._objects.includes(row) &&
+        !funArtistEntries.includes(this.entries[index]) &&
         y >= row.top &&
         y <= row.top + this.boxheight
     );
@@ -94,10 +102,47 @@ class Roller {
     this.stopBulbAnimation();
     this.isRolling = false;
     this.canvas.getElement().style.cursor = "default";
-    if (!entries) {
-      this.entries = [];
-    } else {
-      this.entries = [...entries];
+    const shuffle = (array) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+    const baseEntries = shuffle(
+      (entries || []).filter((entry) => !funArtistEntries.includes(entry))
+    );
+    const funEntryShare = 0.05;
+    // Round up so each special entry is at least 5% of the final spinner.
+    const copiesPerFunEntry = baseEntries.length
+      ? Math.ceil(
+          (baseEntries.length * funEntryShare) /
+            (1 - funArtistEntries.length * funEntryShare)
+        )
+      : 0;
+    const specialEntries = [];
+    for (let i = 0; i < copiesPerFunEntry; i++) {
+      funArtistEntries.forEach((entry) => specialEntries.push(entry));
+    }
+    this.entries = [];
+    let specialIndex = 0;
+    for (let i = 0; i < baseEntries.length; i++) {
+      this.entries.push(baseEntries[i]);
+      if (i === baseEntries.length - 1) continue;
+
+      const previousSpecialCount = Math.floor(
+        (i * specialEntries.length) / (baseEntries.length - 1)
+      );
+      const nextSpecialCount = Math.floor(
+        ((i + 1) * specialEntries.length) / (baseEntries.length - 1)
+      );
+      const specialsAfterThis = nextSpecialCount - previousSpecialCount;
+      for (let j = 0; j < specialsAfterThis; j++) {
+        this.entries.push(specialEntries[specialIndex++]);
+      }
+    }
+    while (specialIndex < specialEntries.length) {
+      this.entries.push(specialEntries[specialIndex++]);
     }
 
     this.canvas.clear();
@@ -109,15 +154,6 @@ class Roller {
     //this.time = 0;
     this.rects = [];
 
-    const shuffle = (array) => {
-      for (let i = array.length - 1; i > 0; i--) { 
-        const j = Math.floor(Math.random() * (i + 1)); 
-        [array[i], array[j]] = [array[j], array[i]]; 
-      } 
-      return array; 
-    };
-  
-    this.entries = shuffle(this.entries);
     this.notifyHitStats();
   }
 
@@ -186,9 +222,11 @@ class Roller {
 
       let fontsize = 24;
 
-      var text = new fabric.Text(this.entries[i], {
+      const isFunEntry = funArtistEntries.includes(this.entries[i]);
+      const text = new fabric.Text(this.entries[i], {
         top: ystart + i * this.boxheight + fontsize / 2,
-        left: 45,
+        left: isFunEntry ? this.boxwidth / 2 : 45,
+        originX: isFunEntry ? "center" : "left",
         fontFamily: "Verdana",
         fontSize: fontsize,
         fontWeight: "bold",
