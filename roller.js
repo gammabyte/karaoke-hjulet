@@ -42,12 +42,58 @@ class Roller {
     this.bulbs = [];
     this.bulbAnimationFrame = null;
     this.bulbAnimationEnabled = true;
+    this.isRolling = false;
+
+    const canvasElement = this.canvas.getElement();
+    canvasElement.addEventListener("click", (event) => {
+      const artist = this.getArtistAtEvent(event);
+      if (artist !== null) {
+        openYoutubeKaraokeSearch(artist);
+      }
+    });
+    canvasElement.addEventListener("mousemove", (event) => {
+      canvasElement.style.cursor =
+        this.getArtistAtEvent(event) !== null ? "pointer" : "default";
+    });
+    canvasElement.addEventListener("mouseleave", () => {
+      canvasElement.style.cursor = "default";
+    });
     
     this.update(entries);
   }
   
+  getArtistAtEvent(event) {
+    if (this.isRolling) {
+      return null;
+    }
+
+    const canvasElement = this.canvas.getElement();
+    const canvasRect = canvasElement.getBoundingClientRect();
+    if (canvasRect.width === 0 || canvasRect.height === 0) {
+      return null;
+    }
+
+    const x =
+      ((event.clientX - canvasRect.left) / canvasRect.width) * this.canvas.width;
+    const y =
+      ((event.clientY - canvasRect.top) / canvasRect.height) * this.canvas.height;
+    if (x < 0 || x > this.canvas.width || y < 0 || y > this.canvas.height) {
+      return null;
+    }
+
+    const index = this.rects.findIndex(
+      (row) =>
+        this.canvas._objects.includes(row) &&
+        y >= row.top &&
+        y <= row.top + this.boxheight
+    );
+    return index === -1 ? null : this.entries[index];
+  }
+
   update(entries) {
     this.stopBulbAnimation();
+    this.isRolling = false;
+    this.canvas.getElement().style.cursor = "default";
     if (!entries) {
       this.entries = [];
     } else {
@@ -257,6 +303,8 @@ class Roller {
 
   init() {
     this.stopBulbAnimation();
+    this.isRolling = false;
+    this.canvas.getElement().style.cursor = "default";
     this.bulbs = [];
     this.canvas.clear();
     this.rects = [];
@@ -446,6 +494,8 @@ class Roller {
     }
 
     const { entry: artist, index: selectedIndex } = selectedCandidate;
+    this.isRolling = true;
+    this.canvas.getElement().style.cursor = "default";
     this.hitCounts.set(artist, (this.hitCounts.get(artist) || 0) + 1);
     this.recentEntries.push(artist);
     if (this.recentEntries.length > 3) {
@@ -486,6 +536,7 @@ class Roller {
             completedAnimations++;
             if (completedAnimations !== this.rects.length) return;
 
+            this.isRolling = false;
             callback(artist);
           },
         }

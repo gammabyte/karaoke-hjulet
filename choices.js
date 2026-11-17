@@ -19,6 +19,46 @@ class Choices {
     this.currentSingers = [];
     this.artistName = null;
     this.singerBoxes = [];
+
+    const canvasElement = this.canvas.getElement();
+    canvasElement.addEventListener("click", (event) => {
+      if (this.isArtistBoxHit(event) && this.artistName !== null) {
+        openYoutubeKaraokeSearch(this.artistName);
+      }
+    });
+    canvasElement.addEventListener("mousemove", (event) => {
+      canvasElement.style.cursor = this.isArtistBoxHit(event)
+        ? "pointer"
+        : "default";
+    });
+    canvasElement.addEventListener("mouseleave", () => {
+      canvasElement.style.cursor = "default";
+    });
+  }
+
+  isArtistBoxHit(event) {
+    if (!this.currentArtistBox || this.artistName === null) {
+      return false;
+    }
+
+    const canvasElement = this.canvas.getElement();
+    const canvasRect = canvasElement.getBoundingClientRect();
+    if (canvasRect.width === 0 || canvasRect.height === 0) {
+      return false;
+    }
+
+    const x =
+      ((event.clientX - canvasRect.left) / canvasRect.width) * this.canvas.width;
+    const y =
+      ((event.clientY - canvasRect.top) / canvasRect.height) * this.canvas.height;
+    const bounds = this.currentArtistBox.getBoundingRect();
+
+    return (
+      x >= bounds.left &&
+      x <= bounds.left + bounds.width &&
+      y >= bounds.top &&
+      y <= bounds.top + bounds.height
+    );
   }
 
 
@@ -227,6 +267,11 @@ class Choices {
   drawArtist(artist) {
     this.currentArtistBox = this.createEntry(artist);
     this.currentArtistBox.top = this.entryheight + this.pad + 10;
+    this.currentArtistBox.setCoords();
+    this.currentArtistBox.set({
+      selectable: false,
+      hoverCursor: "pointer",
+    });
 
     this.canvas.add(this.currentArtistBox);
   }
@@ -271,6 +316,15 @@ class Choices {
 
     return new fabric.Group([box, title]);
   }
+}
+
+function openYoutubeKaraokeSearch(artist) {
+  const query = encodeURIComponent(`${artist} karaoke`);
+  window.open(
+    `https://www.youtube.com/results?search_query=${query}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
 }
 
 const colorsChoices = [
