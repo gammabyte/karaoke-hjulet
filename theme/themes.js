@@ -1,5 +1,6 @@
 const themeDefault = {
-    name: "Mixed",
+    name: "New Year",
+    headerText: "Happy New Year!",
     style: "theme/default/style.css",
     particleColors: ["#FF5930", "#FFFF00", "#00FFFF"],
     particleShape: "star",
@@ -8,6 +9,7 @@ const themeDefault = {
 
 const themeChristmas = {
     name: "Christmas",
+    headerPostfix: " Cozy",
     style: "theme/christmas/style.css",
     particleColors: ["#ffffff"],
     particleShape: "circle",
@@ -16,6 +18,7 @@ const themeChristmas = {
 
 const theme90sMusic = {
     name: "90's",
+    headerPostfix: " Kitsch",
     style: "theme/90s/style.css",
     particleColors: ["#00F2FF", "#FF00FF", "#FFFF00"], 
     particleShape: "triangle", // Triangles were everywhere in 90s graphic design!
@@ -24,6 +27,7 @@ const theme90sMusic = {
 
 const theme80sMusic = {
     name: "80's",
+    headerPostfix: " Vibe",
     style: "theme/80s/style.css",
     particleColors: ["#00d4ff", "#ffff00", "#ff0043"], 
     particleShape: "edge", // Squares look more like 8 bit / arcade pixels
@@ -31,7 +35,8 @@ const theme80sMusic = {
 };
 
 const themeRockMetal = {
-    name: "Rock & Metal",
+    name: "Rock",
+    headerPostfix: " Power!",
     style: "theme/rock_metal/style.css",
     // Grayscale colors to look like sparks or stage dust
     particleColors: ["#ffffff", "#999999", "#444444"], 

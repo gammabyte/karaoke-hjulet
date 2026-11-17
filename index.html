@@ -161,19 +161,62 @@
       }
 
       #artist-list-control {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 8px;
         padding: 6px 8px;
         color: white;
-        background: rgba(0, 0, 0, 0.75);
+        background: linear-gradient(135deg, var(--button-shadow), #111);
+        border-top: 2px solid var(--button-color);
         font: bold 12px Arial, sans-serif;
+        text-transform: uppercase;
       }
 
       #artistListSelector {
         flex: 1;
         min-width: 0;
-        padding: 6px;
+        appearance: none;
+        border: 2px solid var(--button-color);
+        border-radius: 6px;
+        padding: 6px 28px 6px 8px;
+        color: white;
+        background-color: var(--button-shadow);
+        font: bold 12px Arial, sans-serif;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      #artistListSelector option {
+        color: white;
+        background: #171717;
+      }
+
+      #artist-list-control::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 17px;
+        width: 7px;
+        height: 7px;
+        border-right: 2px solid var(--button-color);
+        border-bottom: 2px solid var(--button-color);
+        transform: translateY(-70%) rotate(45deg);
+        pointer-events: none;
+      }
+
+      #artistListSelector:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 2px;
+      }
+
+      #artistListSelector:hover:not(:disabled) {
+        filter: brightness(1.15);
+      }
+
+      #artistListSelector:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
       }
 
       .buttonbox {
@@ -317,7 +360,9 @@
       function switchTheme(){
         changeTheme(); 
         initParticles(); 
-        document.getElementById("theme-h").innerHTML = themeSelected.name.toUpperCase();
+        document.getElementById("theme-h").textContent =
+          themeSelected.headerText ||
+          `${themeSelected.name.toUpperCase()}${themeSelected.headerPostfix || ""}`;
         
         let primaryColor = themeSelected.wheelPrimarycolor;
         wheel1.theme(primaryColor);
@@ -469,11 +514,11 @@
 
     <label>Select Theme:</label>
     <select id="themeSelector" onchange="switchTheme()">
-      <option value="default">Default</option>
+      <option value="default">New Year</option>
       <option value="christmas">Christmas</option>
       <option value="90s">90's</option>
       <option value="80s">80's</option>
-      <option value="rock_metal" selected>Rock & Metal</option>
+      <option value="rock_metal" selected>Rock</option>
     </select>
 
     <label style="margin-top:10px;">Timer:</label>
