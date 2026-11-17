@@ -611,10 +611,8 @@
         var audio = new Audio("sound/spin.wav");
         const playbackRate = clipDuration / rotationSeconds;
         audio.playbackRate = playbackRate;
-        audio.play();
 
-        enableSinger(false);
-        wheel1.rotate(rotationSeconds, (value) => {
+        const started = wheel1.rotate(rotationSeconds, (value) => {
           var audio2 = new Audio("sound/success.mp3");
           audio2.play();
 
@@ -635,7 +633,15 @@
           choices.addSinger(value);
           enableSinger(true);
           applyPendingCanvasResize();
-        });
+        }, choices.currentSingers);
+
+        if (!started) {
+          console.warn("Singer spin skipped: every wheel entry is in recent history.");
+          return;
+        }
+
+        enableSinger(false);
+        audio.play();
       }
       let hasUserInteracted = false;
       let curmusix = "myAudio1";

@@ -301,25 +301,29 @@ const sector = new fabric.Path(pathData, {
   radiansToDegrees(radians) {
     return radians * (180 / Math.PI);
   }
-  rotate(rotationSeconds, callback) {
-    if (this.entries.length === 0) return;
-
+  rotate(rotationSeconds, callback, excludedEntries = []) {
     const entries = [...this.entries];
-    const totalWeight = entries.reduce(
-      (total, entry) => total + this.getEntryWeight(entry),
+    const excluded = new Set(excludedEntries);
+    const candidates = entries
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry }) => !excluded.has(entry));
+    if (candidates.length === 0) return false;
+
+    const totalWeight = candidates.reduce(
+      (total, { entry }) => total + this.getEntryWeight(entry),
       0
     );
     let remainingWeight = Math.random() * totalWeight;
-    let selectedIndex = entries.length - 1;
+    let selectedCandidate = candidates[candidates.length - 1];
 
-    for (let i = 0; i < entries.length; i++) {
-      remainingWeight -= this.getEntryWeight(entries[i]);
+    for (const candidate of candidates) {
+      remainingWeight -= this.getEntryWeight(candidate.entry);
       if (remainingWeight < 0) {
-        selectedIndex = i;
+        selectedCandidate = candidate;
         break;
       }
     }
-    const selectedEntry = entries[selectedIndex];
+    const { entry: selectedEntry, index: selectedIndex } = selectedCandidate;
     this.hitCounts.set(
       selectedEntry,
       (this.hitCounts.get(selectedEntry) || 0) + 1
@@ -361,6 +365,7 @@ const sector = new fabric.Path(pathData, {
     thething.addEventListener("transitionend", handler);
     thething.style.cssText = `transition: transform ${rotationSeconds}s ease-in-out; transform: rotate(${this.rotation}deg);`;
     fallbackTimeout = setTimeout(finish, rotationSeconds * 1000 + 100);
+    return true;
   }
 }
 
