@@ -27,6 +27,13 @@ const funArtistEntries = [
   "🥂 CHEERS! 🥂",
   "🙌 AUDIENCE CHOICE 🙌",
 ];
+const themeArtistEntries = [
+  "🎬 FILM SONGS 🎬",
+  "🎄 XMAS SONGS 🎄",
+  "✨ EUROVISION SONGS ✨",
+  "🏰 DISNEY SONGS 🏰",
+];
+const specialArtistEntries = [...funArtistEntries, ...themeArtistEntries];
 
 class Roller {
   constructor(container, canvas, entries) {
@@ -91,7 +98,7 @@ class Roller {
     const index = this.rects.findIndex(
       (row, index) =>
         this.canvas._objects.includes(row) &&
-        !funArtistEntries.includes(this.entries[index]) &&
+        !specialArtistEntries.includes(this.entries[index]) &&
         y >= row.top &&
         y <= row.top + this.boxheight
     );
@@ -110,19 +117,19 @@ class Roller {
       return array;
     };
     const baseEntries = shuffle(
-      (entries || []).filter((entry) => !funArtistEntries.includes(entry))
+      (entries || []).filter((entry) => !specialArtistEntries.includes(entry))
     );
-    const funEntryShare = 0.05;
-    // Round up so each special entry is at least 5% of the final spinner.
-    const copiesPerFunEntry = baseEntries.length
+    const specialEntryShare = 0.02;
+    // Round up so each special entry is at least 2% of the final spinner.
+    const copiesPerSpecialEntry = baseEntries.length
       ? Math.ceil(
-          (baseEntries.length * funEntryShare) /
-            (1 - funArtistEntries.length * funEntryShare)
+          (baseEntries.length * specialEntryShare) /
+            (1 - specialArtistEntries.length * specialEntryShare)
         )
       : 0;
     const specialEntries = [];
-    for (let i = 0; i < copiesPerFunEntry; i++) {
-      funArtistEntries.forEach((entry) => specialEntries.push(entry));
+    for (let i = 0; i < copiesPerSpecialEntry; i++) {
+      specialArtistEntries.forEach((entry) => specialEntries.push(entry));
     }
     this.entries = [];
     let specialIndex = 0;
@@ -222,11 +229,11 @@ class Roller {
 
       let fontsize = 24;
 
-      const isFunEntry = funArtistEntries.includes(this.entries[i]);
+      const isSpecialEntry = specialArtistEntries.includes(this.entries[i]);
       const text = new fabric.Text(this.entries[i], {
         top: ystart + i * this.boxheight + fontsize / 2,
-        left: isFunEntry ? this.boxwidth / 2 : 45,
-        originX: isFunEntry ? "center" : "left",
+        left: isSpecialEntry ? this.boxwidth / 2 : 45,
+        originX: isSpecialEntry ? "center" : "left",
         fontFamily: "Verdana",
         fontSize: fontsize,
         fontWeight: "bold",
