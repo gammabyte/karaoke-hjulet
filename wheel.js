@@ -28,6 +28,9 @@ class Wheel {
     this.canvas = canvas;
     this.entries = entries;
     this.rotation = 0;
+    this.hitCounts = new Map();
+    this.onHitStats = null;
+    this.weightDecay = 0.2;
   }
 
   theme(primaryColor) {
@@ -47,6 +50,46 @@ class Wheel {
   update(entries) {
     this.entries = [...entries];
     this.canvas.clear();
+    this.notifyHitStats();
+  }
+
+  getHitStats(entries = this.entries) {
+    const totalWeight = entries.reduce(
+      (total, entry) => total + this.getEntryWeight(entry),
+      0
+    );
+
+    return entries.map((entry, index) => {
+      const hits = this.hitCounts.get(entry) || 0;
+      const weight = this.getEntryWeight(entry);
+      return {
+        index,
+        entry,
+        hits,
+        weight,
+        chance: totalWeight === 0 ? 0 : (weight / totalWeight) * 100
+      };
+    });
+  }
+
+  getEntryWeight(entry) {
+    const hits = this.hitCounts.get(entry) || 0;
+    return Math.max(Number.MIN_VALUE, this.weightDecay ** hits);
+  }
+
+  setWeightDecay(value) {
+    if (!Number.isFinite(value) || value <= 0 || value > 1) {
+      throw new RangeError("Weight retention must be greater than 0 and at most 1.");
+    }
+
+    this.weightDecay = value;
+    this.notifyHitStats();
+  }
+
+  notifyHitStats() {
+    if (this.onHitStats) {
+      this.onHitStats(this.getHitStats());
+    }
   }
 
   resize(width, height) {
@@ -259,7 +302,42 @@ const sector = new fabric.Path(pathData, {
     return radians * (180 / Math.PI);
   }
   rotate(rotationSeconds, callback) {
-    this.rotation += 2*360 + Math.random() * 4 * 360;
+    if (this.entries.length === 0) return;
+
+    const entries = [...this.entries];
+    const totalWeight = entries.reduce(
+      (total, entry) => total + this.getEntryWeight(entry),
+      0
+    );
+    let remainingWeight = Math.random() * totalWeight;
+    let selectedIndex = entries.length - 1;
+
+    for (let i = 0; i < entries.length; i++) {
+      remainingWeight -= this.getEntryWeight(entries[i]);
+      if (remainingWeight < 0) {
+        selectedIndex = i;
+        break;
+      }
+    }
+    const selectedEntry = entries[selectedIndex];
+    this.hitCounts.set(
+      selectedEntry,
+      (this.hitCounts.get(selectedEntry) || 0) + 1
+    );
+    console.log("Wheel selected index:", selectedIndex, "entry:", entries[selectedIndex]);
+    console.log("Selection chances for the next roll:");
+    const hitStats = this.getHitStats(entries);
+    console.table(hitStats);
+    if (this.onHitStats) {
+      this.onHitStats(hitStats);
+    }
+
+    const slice = 360 / entries.length;
+    const targetAngle = (360 - (selectedIndex + 0.5) * slice) % 360;
+    const currentAngle = ((this.rotation % 360) + 360) % 360;
+    const alignmentRotation = (targetAngle - currentAngle + 360) % 360;
+    const extraSpins = 2 + Math.floor(Math.random() * 4);
+    this.rotation += extraSpins * 360 + alignmentRotation;
 
     let thething = document.getElementById(this.container);
     let completed = false;
@@ -271,20 +349,7 @@ const sector = new fabric.Path(pathData, {
       thething.removeEventListener("transitionend", handler);
       clearTimeout(fallbackTimeout);
 
-      let slice = 360 / this.entries.length;
-      let onecircle = this.rotation % 360;
-      let index = onecircle / slice;
-
-      index = (this.entries.length - index) % this.entries.length;
-
-      console.log(
-        "Rotation animation completed!" + onecircle + " --- index: " + index
-
-        // decide where the arrow needs to be and map rotation to index
-      );
-
-      let aname = this.entries[Math.floor(index)];
-      callback(aname);
+      callback(selectedEntry);
     };
 
     let handler = (event) => {
