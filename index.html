@@ -143,6 +143,37 @@
         /*background: blue;*/
         width: 25%;
         height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #roller-viewport {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      #rollerCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      #artist-list-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        color: white;
+        background: rgba(0, 0, 0, 0.75);
+        font: bold 12px Arial, sans-serif;
+      }
+
+      #artistListSelector {
+        flex: 1;
+        min-width: 0;
+        padding: 6px;
       }
 
       .buttonbox {
@@ -178,16 +209,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.js"></script>
     <script src="members.js"></script>
     <script src="wheel.js"></script>
-    <script src="songs.js"></script>
     <script src="roller.js"></script>
     <script src="choices.js"></script>
+    <script src="songs/artist-lists.js"></script>
     
     <script src="particles.min.js"></script>
     <script src="particle/script.js"></script>
 
     <script src="script/color.js"></script>
 
-    <script src="theme/theme.js"></script>
+    <script src="theme/themes.js"></script>
     <link id="theme-link" rel="stylesheet" href="will_be_replaced_on_load" />
 
     <link rel="stylesheet" href="style/theme.css">
@@ -287,8 +318,6 @@
         changeTheme(); 
         initParticles(); 
         document.getElementById("theme-h").innerHTML = themeSelected.name.toUpperCase();
-        roller.update(themeSelected.songs);
-        roller.init();
         
         let primaryColor = themeSelected.wheelPrimarycolor;
         wheel1.theme(primaryColor);
@@ -307,6 +336,27 @@
         }
       }
 
+      function switchArtistList() {
+        const selectedList = songLists[
+          document.getElementById("artistListSelector").value
+        ];
+        roller.update(selectedList.artists);
+        roller.init();
+        roller.theme(themeSelected.wheelPrimarycolor);
+      }
+
+      function populateArtistListSelector() {
+        const selector = document.getElementById("artistListSelector");
+        selector.replaceChildren();
+        Object.entries(songLists).forEach(([id, list]) => {
+          const option = document.createElement("option");
+          option.value = id;
+          option.textContent = list.name;
+          selector.append(option);
+        });
+        selector.value = defaultSongListId;
+      }
+
       let pendingCanvasResize = false;
       let canvasResizeTimeout = null;
       let resizeAfterSpinTimeout = null;
@@ -315,6 +365,7 @@
       function updateSpinButtons() {
         const singerButton = document.getElementById("spinSingerButton");
         const artistButton = document.getElementById("rollArtistButton");
+        const artistListSelector = document.getElementById("artistListSelector");
         if (!singerButton || !artistButton) return;
 
         singerButton.disabled = !singerEnabled || isWaitingForResize;
@@ -330,6 +381,9 @@
           : artistEnabled
             ? "ROLL ARTIST"
             : "ROLLING...";
+        if (artistListSelector) {
+          artistListSelector.disabled = !artistEnabled || isWaitingForResize;
+        }
       }
 
       function positionWheelArrow() {
@@ -374,8 +428,8 @@
           document.getElementById("leftbox").offsetHeight
         );
         roller.resize(
-          document.getElementById("rightbox").offsetWidth,
-          document.getElementById("rightbox").offsetHeight
+          document.getElementById("roller-viewport").offsetWidth,
+          document.getElementById("roller-viewport").offsetHeight
         );
         choices.resize(
           document.getElementById("middlebox").offsetWidth,
@@ -503,12 +557,6 @@
 
 
 </div>
-<script>
-  window.addEventListener('load', () => {
-    setTimeout(() => { switchTheme(); }, 0);
-  });
-</script>
-
     <div class="theme-header">
       <h1 id="theme-h">HAPPY NEW YEAR!</h1>
     </div>
@@ -612,7 +660,13 @@
       </div>
     </div>
     <div id="rightbox">
-      <canvas id="rollerCanvas" style="background-color: black"></canvas>
+      <div id="roller-viewport">
+        <canvas id="rollerCanvas" style="background-color: black"></canvas>
+      </div>
+      <div id="artist-list-control">
+        <label for="artistListSelector">Artist list:</label>
+        <select id="artistListSelector" onchange="switchArtistList()"></select>
+      </div>
     </div>
 
     <script>
@@ -789,9 +843,10 @@
 
 
         let rollerCanvas = new fabric.StaticCanvas("rollerCanvas");
-        rollerCanvas.setWidth(document.getElementById("rightbox").offsetWidth);
+        const rollerViewport = document.getElementById("roller-viewport");
+        rollerCanvas.setWidth(rollerViewport.offsetWidth);
         rollerCanvas.setHeight(
-          document.getElementById("rightbox").offsetHeight
+          rollerViewport.offsetHeight
         );
 
         roller = new Roller("rollerCanvas", rollerCanvas, []);
@@ -833,7 +888,9 @@
 
         wheelArrow.add(triangle);
         positionWheelArrow();
-        initParticles();
+        switchTheme();
+        populateArtistListSelector();
+        switchArtistList();
       }
     </script>
 
