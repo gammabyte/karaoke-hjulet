@@ -22,18 +22,34 @@ function adjustColor(hex, amount) {
     return `#${getHex(r)}${getHex(g)}${getHex(b)}`;
 }
 
+// Percentages are each entry's target share of the final spinner.
 const funArtistEntries = [
-  "🎤 FREE CHOICE 🎤",
-  "🥂 CHEERS! 🥂",
-  "🙌 AUDIENCE CHOICE 🙌",
+  { label: "🎤 FREE CHOICE 🎤", percent: 2 },
+  { label: "🥂 CHEERS! 🥂", percent: 2 },
+  { label: "🙌 AUDIENCE CHOICE 🙌", percent: 2 },
 ];
 const themeArtistEntries = [
-  "🎬 FILM SONGS 🎬",
-  "🎄 XMAS SONGS 🎄",
-  "✨ EUROVISION SONGS ✨",
-  "🏰 DISNEY SONGS 🏰",
+  { label: "🎬 FILM SONGS 🎬", percent: 2 },
+  { label: "🎄 XMAS SONGS 🎄", percent: 2 },
+  { label: "✨ EUROVISION SONGS ✨", percent: 2 },
+  { label: "🏰 DISNEY SONGS 🏰", percent: 2 },
 ];
 const specialArtistEntries = [...funArtistEntries, ...themeArtistEntries];
+const specialArtistLabels = specialArtistEntries.map(({ label }) => label);
+const totalSpecialPercent = specialArtistEntries.reduce(
+  (total, { percent }) => total + percent,
+  0
+);
+if (
+  specialArtistEntries.some(
+    ({ percent }) => !Number.isFinite(percent) || percent < 0
+  ) ||
+  totalSpecialPercent >= 100
+) {
+  throw new RangeError(
+    "Special-entry percentages must be nonnegative and total less than 100."
+  );
+}
 
 class Roller {
   constructor(container, canvas, entries) {
@@ -99,7 +115,7 @@ class Roller {
     const index = this.rects.findIndex(
       (row, index) =>
         this.canvas._objects.includes(row) &&
-        !specialArtistEntries.includes(this.entries[index]) &&
+        !specialArtistLabels.includes(this.entries[index]) &&
         y >= row.top &&
         y <= row.top + this.boxheight
     );
@@ -118,19 +134,37 @@ class Roller {
       return array;
     };
     const baseEntries = shuffle(
-      (entries || []).filter((entry) => !specialArtistEntries.includes(entry))
+      (entries || []).filter((entry) => !specialArtistLabels.includes(entry))
     );
-    const specialEntryShare = 0.02;
-    // Round up so each special entry is at least 2% of the final spinner.
-    const copiesPerSpecialEntry = baseEntries.length
-      ? Math.ceil(
-          (baseEntries.length * specialEntryShare) /
-            (1 - specialArtistEntries.length * specialEntryShare)
-        )
-      : 0;
+    const copiesPerSpecialEntry = new Array(specialArtistEntries.length).fill(0);
+    if (baseEntries.length) {
+      let totalSlots = Math.ceil(
+        baseEntries.length / (1 - totalSpecialPercent / 100)
+      );
+      while (true) {
+        const requiredCopies = specialArtistEntries.map(({ percent }) =>
+          Math.ceil((totalSlots * percent) / 100)
+        );
+        const requiredTotalSlots =
+          baseEntries.length +
+          requiredCopies.reduce((total, count) => total + count, 0);
+        if (requiredTotalSlots === totalSlots) {
+          requiredCopies.forEach((count, index) => {
+            copiesPerSpecialEntry[index] = count;
+          });
+          break;
+        }
+        totalSlots = requiredTotalSlots;
+      }
+    }
     const specialEntries = [];
-    for (let i = 0; i < copiesPerSpecialEntry; i++) {
-      specialArtistEntries.forEach((entry) => specialEntries.push(entry));
+    const maxCopiesPerSpecialEntry = Math.max(...copiesPerSpecialEntry);
+    for (let i = 0; i < maxCopiesPerSpecialEntry; i++) {
+      specialArtistEntries.forEach(({ label }, index) => {
+        if (i < copiesPerSpecialEntry[index]) {
+          specialEntries.push(label);
+        }
+      });
     }
     this.entries = [];
     let specialIndex = 0;
@@ -230,7 +264,7 @@ class Roller {
 
       let fontsize = 24;
 
-      const isSpecialEntry = specialArtistEntries.includes(this.entries[i]);
+      const isSpecialEntry = specialArtistLabels.includes(this.entries[i]);
       const text = new fabric.Text(this.entries[i], {
         top: ystart + i * this.boxheight + fontsize / 2,
         left: isSpecialEntry ? this.boxwidth / 2 : 45,

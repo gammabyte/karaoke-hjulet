@@ -40,7 +40,7 @@ class Choices {
     if (
       !this.currentArtistBox ||
       this.artistName === null ||
-      specialArtistEntries.includes(this.artistName)
+      specialArtistLabels.includes(this.artistName)
     ) {
       return false;
     }
@@ -323,7 +323,7 @@ class Choices {
 }
 
 function openYoutubeKaraokeSearch(artist) {
-  if (specialArtistEntries.includes(artist)) {
+  if (specialArtistLabels.includes(artist)) {
     return;
   }
 
