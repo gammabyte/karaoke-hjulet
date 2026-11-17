@@ -54,6 +54,12 @@
         flicker 3s linear infinite;
 }
 
+body.debug-static-text-effects .theme-header h1,
+body.debug-static-text-effects .app-title h2,
+body.debug-static-text-effects #countdown-display {
+    animation: none !important;
+}
+
 /* Keyframes for the swaying motion */
 @keyframes rockSway {
     0% {
@@ -72,5 +78,5 @@
 /* Add this to the animation property: flicker 3s infinite */
 @keyframes flicker {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.9; text-shadow: 0 0 30px var(--button-color); }
+    50% { opacity: 0.9; }
 }

@@ -66,6 +66,17 @@
   margin-bottom: 5px;
 }
 
+.debug-effect-toggle {
+  display: flex !important;
+  align-items: center;
+  gap: 5px;
+}
+
+#debug .debug-effect-toggle input {
+  width: auto;
+  margin: 0 0 5px;
+}
+
 #wheel-hit-debug,
 #artist-hit-debug {
   margin: 10px 0;

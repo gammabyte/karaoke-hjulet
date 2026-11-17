@@ -41,6 +41,7 @@ class Roller {
     this.onHitStats = null;
     this.bulbs = [];
     this.bulbAnimationFrame = null;
+    this.bulbAnimationEnabled = true;
     
     this.update(entries);
   }
@@ -172,6 +173,22 @@ class Roller {
     }
   }
 
+  setBulbAnimationEnabled(enabled) {
+    this.bulbAnimationEnabled = enabled;
+    if (enabled) {
+      this.animateBulbs();
+      return;
+    }
+
+    this.stopBulbAnimation();
+    this.bulbs.forEach(({ group, lamp, color }) => {
+      lamp.set("fill", color);
+      group.set("shadow", null);
+    });
+    this.frame.dirty = true;
+    this.canvas.renderAll();
+  }
+
   trackBulb(group, color) {
     const glowColor = adjustColor(color, 70).slice(1);
     const glowRgb = [
@@ -192,37 +209,46 @@ class Roller {
     const prefersReducedMotion =
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (this.bulbs.length === 0 || prefersReducedMotion) {
+    if (
+      !this.bulbAnimationEnabled ||
+      this.bulbs.length === 0 ||
+      prefersReducedMotion
+    ) {
       return;
     }
 
+    let lastFrame = 0;
+    const frameInterval = 1000 / 30;
     const animate = (time) => {
-      this.bulbs.forEach((bulb, index) => {
-        const { group, lamp, color, glowRgb } = bulb;
-        const pulse = Math.max(0, Math.sin(time / 300 + index * 0.45));
-        const brightness = Math.round(-80 + pulse * 150);
-        lamp.set("fill", adjustColor(color, brightness));
+      if (time - lastFrame >= frameInterval) {
+        lastFrame = time;
+        this.bulbs.forEach((bulb, index) => {
+          const { group, lamp, color, glowRgb } = bulb;
+          const pulse = Math.max(0, Math.sin(time / 300 + index * 0.45));
+          const brightness = Math.round(-80 + pulse * 150);
+          lamp.set("fill", adjustColor(color, brightness));
 
-        const glow = pulse * pulse * 0.75;
-        if (glow > 0.01) {
-          group.set(
-            "shadow",
-            new fabric.Shadow({
-              color: `rgba(${glowRgb}, ${glow})`,
-              blur: 18 * pulse,
-              offsetX: 0,
-              offsetY: 0,
-            })
-          );
-          bulb.glowing = true;
-        } else if (bulb.glowing) {
-          group.set("shadow", null);
-          bulb.glowing = false;
-        }
-      });
+          const glow = pulse * pulse * 0.75;
+          if (glow > 0.01) {
+            group.set(
+              "shadow",
+              new fabric.Shadow({
+                color: `rgba(${glowRgb}, ${glow})`,
+                blur: 18 * pulse,
+                offsetX: 0,
+                offsetY: 0,
+              })
+            );
+            bulb.glowing = true;
+          } else if (bulb.glowing) {
+            group.set("shadow", null);
+            bulb.glowing = false;
+          }
+        });
 
-      this.frame.dirty = true;
-      this.canvas.renderAll();
+        this.frame.dirty = true;
+        this.canvas.renderAll();
+      }
       this.bulbAnimationFrame = requestAnimationFrame(animate);
     };
 

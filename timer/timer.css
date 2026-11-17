@@ -35,8 +35,8 @@
     text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
     /* Overrides default animation with violent shaking and strobing */
     animation: 
-        erraticShake 0.08s infinite !important, 
-        flicker 0.1s infinite !important;
+        erraticShake 0.3s ease-in-out infinite !important,
+        flicker 0.3s linear infinite !important;
 }
 
 /* Existing Sway for context */

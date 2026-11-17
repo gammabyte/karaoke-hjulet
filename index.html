@@ -224,6 +224,22 @@
         renderHitStats("artist-hit-rows", stats, "No artists loaded");
       }
 
+      function setWheelBulbsEnabled(enabled) {
+        if (typeof wheel1 !== "undefined" && wheel1) {
+          wheel1.setBulbAnimationEnabled(enabled);
+        }
+      }
+
+      function setRollerBulbsEnabled(enabled) {
+        if (typeof roller !== "undefined" && roller) {
+          roller.setBulbAnimationEnabled(enabled);
+        }
+      }
+
+      function setTextAnimationsEnabled(enabled) {
+        document.body.classList.toggle("debug-static-text-effects", !enabled);
+      }
+
       function renderHitStats(rowsId, stats, emptyMessage) {
         const rows = document.getElementById(rowsId);
         if (!rows) return;
@@ -424,6 +440,23 @@
       onchange="changeWheelWeightDecay()"
     />
     <small>0.2 retains 20% per hit; 1 = no reduction</small>
+
+    <label class="debug-effect-toggle">
+      <input type="checkbox" checked onchange="setWheelBulbsEnabled(this.checked)" />
+      Wheel bulb glow
+    </label>
+    <label class="debug-effect-toggle">
+      <input type="checkbox" checked onchange="setRollerBulbsEnabled(this.checked)" />
+      Roller bulb glow
+    </label>
+    <label class="debug-effect-toggle">
+      <input type="checkbox" checked onchange="setParticlesEnabled(this.checked)" />
+      Background particles
+    </label>
+    <label class="debug-effect-toggle">
+      <input type="checkbox" checked onchange="setTextAnimationsEnabled(this.checked)" />
+      Animated titles and timer
+    </label>
 
     <div id="wheel-hit-debug">
       <strong>SINGER WEIGHTS (NEXT ROLL)</strong>
@@ -797,6 +830,7 @@
 
         wheelArrow.add(triangle);
         positionWheelArrow();
+        initParticles();
       }
     </script>
 

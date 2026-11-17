@@ -1,8 +1,20 @@
+let particlesEnabled = true;
+
 function initParticles() {
+  const instance = window.pJSDom?.[0]?.pJS;
+  if (instance) {
+    instance.particles.color.value = themeSelected.particleColors;
+    instance.particles.shape.type = themeSelected.particleShape;
+    if (particlesEnabled) {
+      instance.fn.particlesRefresh();
+    }
+    return;
+  }
+
   particlesJS("particles-js", {
     particles: {
       number: {
-        value: 80,
+        value: 50,
         density: {
           enable: true,
           value_area: 800,
@@ -106,6 +118,23 @@ function initParticles() {
         },
       },
     },
-    retina_detect: true,
+    retina_detect: false,
   });
+}
+
+function setParticlesEnabled(enabled) {
+  particlesEnabled = enabled;
+  const instance = window.pJSDom?.[0]?.pJS;
+  if (!instance) {
+    if (enabled) initParticles();
+    return;
+  }
+
+  if (enabled) {
+    instance.canvas.el.style.display = "";
+    instance.fn.particlesRefresh();
+  } else {
+    cancelAnimationFrame(instance.fn.drawAnimFrame);
+    instance.canvas.el.style.display = "none";
+  }
 }
