@@ -7,6 +7,11 @@ class Choices {
     this.entryheight = 60;
     this.thick = 1;
     this.fontsize = 24;
+    this.maxSingerHistory = 3;
+    this.singerGap = 6;
+    this.boxStroke = "black";
+    this.boxStrokeWidth = 3;
+    this.textOutlineWidth = 1.5;
 
     this.singersOffset = this.pad + this.entryheight * 3;
 
@@ -35,13 +40,38 @@ class Choices {
     this.singerBoxes = [];
     this.currentArtistBox = null;
 
+    const panelPadding = 10;
+    const artistPanel = new fabric.Rect({
+      left: panelPadding,
+      top: this.pad - panelPadding,
+      width: this.canvas.width - panelPadding * 2,
+      height: this.entryheight * 2 + panelPadding * 3,
+      fill: "rgba(0, 0, 0, 0.33)",
+      rx: 10,
+      ry: 10,
+      strokeWidth: 0,
+    });
+    const singersPanel = new fabric.Rect({
+      left: panelPadding,
+      top: this.singersOffset - panelPadding,
+      width: this.canvas.width - panelPadding * 2,
+      height:
+        this.entryheight * (this.maxSingerHistory + 1) +
+        panelPadding * 3 +
+        this.singerGap * (this.maxSingerHistory - 1),
+      fill: "rgba(0, 0, 0, 0.33)",
+      rx: 10,
+      ry: 10,
+      strokeWidth: 0,
+    });
+
     let artistbox = new fabric.Rect({
       left: this.pad,
       top: this.pad,
       width: this.canvas.width - this.pad * 2,
       height: this.entryheight,
-      stroke: "#333", // Darker stroke for better contrast
-      strokeWidth: 2, // Slightly thinner stroke
+      stroke: this.boxStroke,
+      strokeWidth: this.boxStrokeWidth,
       rx: 10, // Rounded corners for a smoother appearance
       ry: 10,
       opacity: 0.9, // Slightly transparent for a more subtle effect
@@ -72,15 +102,16 @@ class Choices {
 
     this.artistbox = artistbox; // used for theme color changing
 
-    var artixttitletext = new fabric.Text("Artist", {
+    var artixttitletext = new fabric.Text("🎤 ARTIST 🎤", {
       top: this.pad + this.entryheight / 2 - this.fontsize / 2,
-      left: this.pad + 20,
+      left: this.canvas.width / 2,
+      originX: "center",
       fontFamily: "Verdana",
       fontSize: this.fontsize,
       fontWeight: "bold",
-      fill: "black",
-      //stroke: "white",
-      //strokeWidth: 0.5,
+      fill: "white",
+      stroke: "black",
+      strokeWidth: this.textOutlineWidth,
     });
 
     let singersbox = new fabric.Rect({
@@ -88,8 +119,8 @@ class Choices {
       top: this.singersOffset,
       width: this.canvas.width - this.pad * 2,
       height: this.entryheight,
-      stroke: "#333", // Darker stroke for better contrast
-      strokeWidth: 2, // Slightly thinner stroke
+      stroke: this.boxStroke,
+      strokeWidth: this.boxStrokeWidth,
       rx: 10, // Rounded corners for a smoother appearance
       ry: 10,
       opacity: 0.9, // Slightly transparent for a more subtle effect
@@ -120,18 +151,26 @@ class Choices {
 
     this.singersbox = singersbox; // used for theme color
 
-    var singerstitletext = new fabric.Text("Singers", {
-      left: this.pad + 20,
+    var singerstitletext = new fabric.Text("🎶 SINGERS 🎶", {
+      left: this.canvas.width / 2,
+      originX: "center",
       top: this.singersOffset + this.entryheight / 2 - this.fontsize / 2,
       fontFamily: "Verdana",
       fontSize: this.fontsize,
       fontWeight: "bold",
-      fill: "black",
-      //stroke: "white",
-      //strokeWidth: 0.5,
+      fill: "white",
+      stroke: "black",
+      strokeWidth: this.textOutlineWidth,
     });
 
-    this.canvas.add(artistbox, artixttitletext, singersbox, singerstitletext);
+    this.canvas.add(
+      artistPanel,
+      singersPanel,
+      artistbox,
+      artixttitletext,
+      singersbox,
+      singerstitletext
+    );
 
     if (this.primaryColor) {
       this.theme(this.primaryColor);
@@ -143,7 +182,7 @@ class Choices {
   }
 
   addSinger(singer) {
-    if (this.currentSingers.length === 3) {
+    if (this.currentSingers.length === this.maxSingerHistory) {
       this.currentSingers.shift();
       this.canvas.remove(this.singerBoxes.shift());
       this.singerBoxes.forEach((box, index) => {
@@ -151,7 +190,7 @@ class Choices {
           this.singersOffset +
           this.entryheight +
           10 +
-          index * this.entryheight;
+          index * (this.entryheight + this.singerGap);
         box.setCoords();
       });
     }
@@ -198,23 +237,22 @@ class Choices {
       this.singersOffset +
       this.entryheight +
       10 +
-      index * this.entryheight;
+      index * (this.entryheight + this.singerGap);
 
     this.singerBoxes.push(newSinger);
     this.canvas.add(newSinger);
   }
 
   createEntry(name) {
-    let stroke = "black";
     let fill = colorsChoices[Math.floor(Math.random()*colorsChoices.length)];
     let box = new fabric.Rect({
       left: this.pad,
       top: this.pad,
       width: this.canvas.width - this.pad * 2,
       height: this.entryheight,
-      stroke: stroke, // Darker stroke for better contrast
+      stroke: this.boxStroke,
       fill: fill,
-      strokeWidth: 2, // Slightly thinner stroke
+      strokeWidth: this.boxStrokeWidth,
       rx: 10, // Rounded corners for a smoother appearance
       ry: 10,
       opacity: 0.9, // Slightly transparent for a more subtle effect
@@ -227,8 +265,8 @@ class Choices {
       fontSize: this.fontsize,
       fontWeight: "bold",
       fill: "white",
-      //stroke: "white",
-      //strokeWidth: 0.5,
+      stroke: "black",
+      strokeWidth: this.textOutlineWidth,
     });
 
     return new fabric.Group([box, title]);
