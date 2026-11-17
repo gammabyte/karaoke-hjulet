@@ -56,6 +56,7 @@ class Roller {
     this.bulbs = [];
     this.bulbAnimationFrame = null;
     this.bulbAnimationEnabled = true;
+    this.animationsPaused = false;
     this.isRolling = false;
 
     const canvasElement = this.canvas.getElement();
@@ -280,6 +281,15 @@ class Roller {
     this.canvas.renderAll();
   }
 
+  setAnimationsPaused(paused) {
+    this.animationsPaused = paused;
+    if (paused) {
+      this.stopBulbAnimation();
+    } else if (this.bulbAnimationEnabled) {
+      this.animateBulbs();
+    }
+  }
+
   trackBulb(group, color) {
     const glowColor = adjustColor(color, 70).slice(1);
     const glowRgb = [
@@ -302,6 +312,8 @@ class Roller {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (
       !this.bulbAnimationEnabled ||
+      this.animationsPaused ||
+      this.bulbAnimationFrame !== null ||
       this.bulbs.length === 0 ||
       prefersReducedMotion
     ) {

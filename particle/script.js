@@ -1,11 +1,12 @@
 let particlesEnabled = true;
+let particlesPaused = document.hidden;
 
 function initParticles() {
   const instance = window.pJSDom?.[0]?.pJS;
   if (instance) {
     instance.particles.color.value = themeSelected.particleColors;
     instance.particles.shape.type = themeSelected.particleShape;
-    if (particlesEnabled) {
+    if (particlesEnabled && !particlesPaused) {
       instance.fn.particlesRefresh();
     }
     return;
@@ -120,21 +121,39 @@ function initParticles() {
     },
     retina_detect: false,
   });
+
+  if (particlesPaused) {
+    setParticlesPaused(true);
+  }
 }
 
 function setParticlesEnabled(enabled) {
   particlesEnabled = enabled;
   const instance = window.pJSDom?.[0]?.pJS;
   if (!instance) {
-    if (enabled) initParticles();
+    if (enabled && !particlesPaused) initParticles();
     return;
   }
 
   if (enabled) {
     instance.canvas.el.style.display = "";
-    instance.fn.particlesRefresh();
+    if (!particlesPaused) {
+      instance.fn.particlesRefresh();
+    }
   } else {
     cancelAnimationFrame(instance.fn.drawAnimFrame);
     instance.canvas.el.style.display = "none";
+  }
+}
+
+function setParticlesPaused(paused) {
+  particlesPaused = paused;
+  const instance = window.pJSDom?.[0]?.pJS;
+  if (!instance || !particlesEnabled) return;
+
+  if (paused) {
+    cancelAnimationFrame(instance.fn.drawAnimFrame);
+  } else {
+    instance.fn.particlesRefresh();
   }
 }

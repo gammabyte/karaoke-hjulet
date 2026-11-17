@@ -34,6 +34,7 @@ class Wheel {
     this.bulbs = [];
     this.bulbAnimationFrame = null;
     this.bulbAnimationEnabled = true;
+    this.animationsPaused = false;
   }
 
   theme(primaryColor) {
@@ -126,12 +127,23 @@ class Wheel {
     this.canvas.renderAll();
   }
 
+  setAnimationsPaused(paused) {
+    this.animationsPaused = paused;
+    if (paused) {
+      this.stopBulbAnimation();
+    } else if (this.bulbAnimationEnabled) {
+      this.animateBulbs();
+    }
+  }
+
   animateBulbs() {
     const prefersReducedMotion =
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (
       !this.bulbAnimationEnabled ||
+      this.animationsPaused ||
+      this.bulbAnimationFrame !== null ||
       this.bulbs.length === 0 ||
       prefersReducedMotion
     ) {

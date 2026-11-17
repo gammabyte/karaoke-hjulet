@@ -123,6 +123,12 @@
         background-repeat: no-repeat, repeat;
         background-size: cover;
       }
+
+      body.animations-paused *,
+      body.animations-paused *::before,
+      body.animations-paused *::after {
+        animation-play-state: paused !important;
+      }
   
       #leftbox {
         float: left;
@@ -316,6 +322,35 @@
 
       function setTextAnimationsEnabled(enabled) {
         document.body.classList.toggle("debug-static-text-effects", !enabled);
+      }
+
+      let visibilityPausedAnimations = [];
+      function pauseVisualAnimations(paused) {
+        document.body.classList.toggle("animations-paused", paused);
+        if (paused) {
+          visibilityPausedAnimations =
+            typeof document.getAnimations === "function"
+              ? document
+                  .getAnimations()
+                  .filter((animation) => animation.playState === "running")
+              : [];
+          visibilityPausedAnimations.forEach((animation) => animation.pause());
+        } else {
+          visibilityPausedAnimations.forEach((animation) => {
+            if (animation.playState === "paused") animation.play();
+          });
+          visibilityPausedAnimations = [];
+        }
+
+        if (typeof setParticlesPaused === "function") {
+          setParticlesPaused(paused);
+        }
+        if (typeof wheel1 !== "undefined" && wheel1) {
+          wheel1.setAnimationsPaused(paused);
+        }
+        if (typeof roller !== "undefined" && roller) {
+          roller.setAnimationsPaused(paused);
+        }
       }
 
       function renderHitStats(rowsId, stats, emptyMessage) {
@@ -857,6 +892,8 @@
         });
 
         document.addEventListener("visibilitychange", function () {
+          pauseVisualAnimations(document.visibilityState !== "visible");
+
           let index = -1;
           let num = Math.random();
           if (num < 0.33) {
@@ -945,6 +982,7 @@
         switchTheme();
         populateArtistListSelector();
         switchArtistList();
+        if (document.hidden) pauseVisualAnimations(true);
       }
     </script>
 
