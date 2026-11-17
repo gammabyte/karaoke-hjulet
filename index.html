@@ -519,7 +519,7 @@
       <option value="christmas">Christmas</option>
       <option value="90s">90's</option>
       <option value="80s">80's</option>
-      <option value="rock_metal" selected>Rock</option>
+      <option value="rock_metal">Rock</option>
       <option value="neon_nights">Neon Nights</option>
       <option value="disco_fever">Disco Fever</option>
       <option value="tropical_heat">Tropical Heat</option>
@@ -939,6 +939,9 @@
 
         wheelArrow.add(triangle);
         positionWheelArrow();
+        const themeSelector = document.getElementById("themeSelector");
+        const themeIds = Object.keys(themes);
+        themeSelector.value = themeIds[Math.floor(Math.random() * themeIds.length)];
         switchTheme();
         populateArtistListSelector();
         switchArtistList();
