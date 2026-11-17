@@ -66,7 +66,8 @@
   margin-bottom: 5px;
 }
 
-#wheel-hit-debug {
+#wheel-hit-debug,
+#artist-hit-debug {
   margin: 10px 0;
   color: #111;
   font: 10px monospace;
@@ -79,19 +80,23 @@
   font-size: 10px;
 }
 
-#wheel-hit-debug strong {
+#wheel-hit-debug strong,
+#artist-hit-debug strong {
   display: block;
   margin-bottom: 4px;
 }
 
-#wheel-hit-debug table {
+#wheel-hit-debug table,
+#artist-hit-debug table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
 }
 
 #wheel-hit-debug th,
-#wheel-hit-debug td {
+#wheel-hit-debug td,
+#artist-hit-debug th,
+#artist-hit-debug td {
   padding: 2px;
   border: 1px solid #bbb;
   text-align: left;
@@ -99,6 +104,8 @@
 }
 
 #wheel-hit-debug th:first-child,
-#wheel-hit-debug td:first-child {
+#wheel-hit-debug td:first-child,
+#artist-hit-debug th:first-child,
+#artist-hit-debug td:first-child {
   width: 18px;
 }

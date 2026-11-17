@@ -188,7 +188,15 @@
       }
 
       function renderWheelHitStats(stats) {
-        const rows = document.getElementById("wheel-hit-rows");
+        renderHitStats("wheel-hit-rows", stats, "No singers loaded");
+      }
+
+      function renderArtistHitStats(stats) {
+        renderHitStats("artist-hit-rows", stats, "No artists loaded");
+      }
+
+      function renderHitStats(rowsId, stats, emptyMessage) {
+        const rows = document.getElementById(rowsId);
         if (!rows) return;
         rows.replaceChildren();
 
@@ -196,7 +204,7 @@
           const row = rows.insertRow();
           const cell = row.insertCell();
           cell.colSpan = 5;
-          cell.textContent = "No singers loaded";
+          cell.textContent = emptyMessage;
           return;
         }
 
@@ -224,6 +232,7 @@
         }
 
         wheel1.setWeightDecay(value);
+        roller.setWeightDecay(value);
       }
 
       function switchTheme(){
@@ -374,7 +383,7 @@
       }
     </script>
 
-    <label for="wheel-weight-decay">Weight retained per hit:</label>
+    <label for="wheel-weight-decay">Weight retained per hit (both spinners):</label>
     <input
       id="wheel-weight-decay"
       type="number"
@@ -395,6 +404,18 @@
         </thead>
         <tbody id="wheel-hit-rows">
           <tr><td colspan="5">Waiting for singers</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="artist-hit-debug">
+      <strong>ARTIST WEIGHTS (NEXT ROLL)</strong>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Artist</th><th>Hits</th><th>Weight</th><th>Chance</th></tr>
+        </thead>
+        <tbody id="artist-hit-rows">
+          <tr><td colspan="5">Waiting for artists</td></tr>
         </tbody>
       </table>
     </div>
@@ -577,10 +598,8 @@
         var audio = new Audio("sound/spin.wav");
         const playbackRate = duration / duration;
         audio.playbackRate = playbackRate;
-        audio.play();
 
-        enableArtist(false);
-        roller.roll(duration * 1000, (value) => {
+        const started = roller.roll(duration * 1000, (value) => {
           var audio2 = new Audio("sound/success.mp3");
           audio2.play();
 
@@ -602,6 +621,14 @@
           enableArtist(true);
           applyPendingCanvasResize();
         });
+
+        if (!started) {
+          console.warn("Artist roll skipped: every artist is in recent history.");
+          return;
+        }
+
+        enableArtist(false);
+        audio.play();
       }
       function spinSinger() {
         const clipDuration = 2.759;
@@ -700,6 +727,7 @@
         );
 
         roller = new Roller("rollerCanvas", rollerCanvas, []);
+        roller.onHitStats = renderArtistHitStats;
         roller.init();
 
         var namesCanvas = new fabric.StaticCanvas("namesCanvas");

@@ -35,6 +35,10 @@ class Roller {
     this.boxwidth = this.canvas.width;
 
     this.totalMove = 0;
+    this.hitCounts = new Map();
+    this.recentEntries = [];
+    this.weightDecay = 0.2;
+    this.onHitStats = null;
     
     this.update(entries);
   }
@@ -64,6 +68,46 @@ class Roller {
     };
   
     this.entries = shuffle(this.entries);
+    this.notifyHitStats();
+  }
+
+  getHitStats(entries = this.entries) {
+    const totalWeight = entries.reduce(
+      (total, entry) => total + this.getEntryWeight(entry),
+      0
+    );
+
+    return entries.map((entry, index) => {
+      const hits = this.hitCounts.get(entry) || 0;
+      const weight = this.getEntryWeight(entry);
+      return {
+        index,
+        entry,
+        hits,
+        weight,
+        chance: totalWeight === 0 ? 0 : (weight / totalWeight) * 100
+      };
+    });
+  }
+
+  getEntryWeight(entry) {
+    const hits = this.hitCounts.get(entry) || 0;
+    return Math.max(Number.MIN_VALUE, this.weightDecay ** hits);
+  }
+
+  setWeightDecay(value) {
+    if (!Number.isFinite(value) || value <= 0 || value > 1) {
+      throw new RangeError("Weight retention must be greater than 0 and at most 1.");
+    }
+
+    this.weightDecay = value;
+    this.notifyHitStats();
+  }
+
+  notifyHitStats() {
+    if (this.onHitStats) {
+      this.onHitStats(this.getHitStats());
+    }
   }
 
   resize(width, height) {
@@ -280,10 +324,50 @@ class Roller {
   }
 
   roll(duration, callback) {
+    const candidates = this.entries
+      .map((entry, index) => ({ entry, index }))
+      .filter(({ entry }) => !this.recentEntries.includes(entry));
+    if (candidates.length === 0) return false;
+
     const fullsize = this.entries.length * this.boxheight;
+    const totalWeight = candidates.reduce(
+      (total, { entry }) => total + this.getEntryWeight(entry),
+      0
+    );
+    let remainingWeight = Math.random() * totalWeight;
+    let selectedCandidate = candidates[candidates.length - 1];
 
-    const move = 2 * fullsize + Math.random() * fullsize;
+    for (const candidate of candidates) {
+      remainingWeight -= this.getEntryWeight(candidate.entry);
+      if (remainingWeight < 0) {
+        selectedCandidate = candidate;
+        break;
+      }
+    }
 
+    const { entry: artist, index: selectedIndex } = selectedCandidate;
+    this.hitCounts.set(artist, (this.hitCounts.get(artist) || 0) + 1);
+    this.recentEntries.push(artist);
+    if (this.recentEntries.length > 3) {
+      this.recentEntries.shift();
+    }
+    console.log("Artist selected index:", selectedIndex, "entry:", artist);
+    console.log("Artist selection chances for the next roll:");
+    const hitStats = this.getHitStats();
+    console.table(hitStats);
+    if (this.onHitStats) {
+      this.onHitStats(hitStats);
+    }
+
+    const targetOffset =
+      ((this.canvas.height / 2 + 60 - (selectedIndex + 0.5) * this.boxheight) %
+        fullsize +
+        fullsize) %
+      fullsize;
+    const currentOffset = ((this.totalMove % fullsize) + fullsize) % fullsize;
+    const alignmentMove = (targetOffset - currentOffset + fullsize) % fullsize;
+    const extraSpins = 2 + Math.floor(Math.random() * 4);
+    const move = extraSpins * fullsize + alignmentMove;
     this.totalMove += move;
 
     let completedAnimations = 0;
@@ -302,15 +386,6 @@ class Roller {
             completedAnimations++;
             if (completedAnimations !== this.rects.length) return;
 
-            const hit = this.totalMove % fullsize;
-            const rowAtArrow = Math.floor(
-              (this.canvas.height / 2 + 60 - hit) / this.boxheight
-            );
-            const realindex =
-              ((rowAtArrow % this.entries.length) + this.entries.length) %
-              this.entries.length;
-            let artist = this.entries[realindex];
-
             callback(artist);
           },
         }
@@ -318,6 +393,7 @@ class Roller {
 
       //      setInterval(() => this.canvas.requestRenderAllBound(), 16);
     }
+    return true;
   }
 
   somefunc() {
