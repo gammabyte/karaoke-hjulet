@@ -31,6 +31,8 @@ class Wheel {
     this.hitCounts = new Map();
     this.onHitStats = null;
     this.weightDecay = 0.2;
+    this.bulbs = [];
+    this.bulbAnimationFrame = null;
   }
 
   theme(primaryColor) {
@@ -49,6 +51,7 @@ class Wheel {
 
   update(entries) {
     this.entries = [...entries];
+    this.stopBulbAnimation();
     this.canvas.clear();
     this.notifyHitStats();
   }
@@ -100,7 +103,56 @@ class Wheel {
     }
   }
 
+  stopBulbAnimation() {
+    if (this.bulbAnimationFrame !== null) {
+      cancelAnimationFrame(this.bulbAnimationFrame);
+      this.bulbAnimationFrame = null;
+    }
+  }
+
+  animateBulbs() {
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (this.bulbs.length === 0 || prefersReducedMotion) {
+      return;
+    }
+
+    const animate = (time) => {
+      this.bulbs.forEach((bulb, index) => {
+        const { group, lamp, color, glowRgb } = bulb;
+        const pulse = Math.max(0, Math.sin(time / 300 + index * 0.45));
+        const brightness = Math.round(-80 + pulse * 150);
+        lamp.set("fill", adjustColor(color, brightness));
+
+        const glow = pulse * pulse * 0.75;
+        if (glow > 0.01) {
+          group.set(
+            "shadow",
+            new fabric.Shadow({
+              color: `rgba(${glowRgb}, ${glow})`,
+              blur: 18 * pulse,
+              offsetX: 0,
+              offsetY: 0,
+            })
+          );
+          bulb.glowing = true;
+        } else if (bulb.glowing) {
+          group.set("shadow", null);
+          bulb.glowing = false;
+        }
+      });
+
+      this.canvas.renderAll();
+      this.bulbAnimationFrame = requestAnimationFrame(animate);
+    };
+
+    this.bulbAnimationFrame = requestAnimationFrame(animate);
+  }
+
   init() {
+    this.stopBulbAnimation();
+    this.bulbs = [];
     this.canvas.clear();
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
@@ -237,6 +289,13 @@ const sector = new fabric.Path(pathData, {
       let b1 = this.bulb(color, 10);
       b1.left = px;
       b1.top = py;
+      const glowColor = adjustColor(color, 70).slice(1);
+      const glowRgb = [
+        parseInt(glowColor.slice(0, 2), 16),
+        parseInt(glowColor.slice(2, 4), 16),
+        parseInt(glowColor.slice(4, 6), 16),
+      ].join(", ");
+      this.bulbs.push({ group: b1, lamp: b1.item(0), color, glowRgb, glowing: false });
       this.canvas.add(b1);
     }
 
@@ -269,6 +328,8 @@ const sector = new fabric.Path(pathData, {
     this.center = midbul2; // used for setting color
 
     this.canvas.add(midbul2);
+
+    this.animateBulbs();
   }
 
   bulb(color, size) {

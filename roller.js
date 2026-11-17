@@ -39,11 +39,14 @@ class Roller {
     this.recentEntries = [];
     this.weightDecay = 0.2;
     this.onHitStats = null;
+    this.bulbs = [];
+    this.bulbAnimationFrame = null;
     
     this.update(entries);
   }
   
   update(entries) {
+    this.stopBulbAnimation();
     if (!entries) {
       this.entries = [];
     } else {
@@ -162,7 +165,73 @@ class Roller {
     this.canvas.renderAll();
   }
 
+  stopBulbAnimation() {
+    if (this.bulbAnimationFrame !== null) {
+      cancelAnimationFrame(this.bulbAnimationFrame);
+      this.bulbAnimationFrame = null;
+    }
+  }
+
+  trackBulb(group, color) {
+    const glowColor = adjustColor(color, 70).slice(1);
+    const glowRgb = [
+      parseInt(glowColor.slice(0, 2), 16),
+      parseInt(glowColor.slice(2, 4), 16),
+      parseInt(glowColor.slice(4, 6), 16),
+    ].join(", ");
+    this.bulbs.push({
+      group,
+      lamp: group.item(0),
+      color,
+      glowRgb,
+      glowing: false,
+    });
+  }
+
+  animateBulbs() {
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (this.bulbs.length === 0 || prefersReducedMotion) {
+      return;
+    }
+
+    const animate = (time) => {
+      this.bulbs.forEach((bulb, index) => {
+        const { group, lamp, color, glowRgb } = bulb;
+        const pulse = Math.max(0, Math.sin(time / 300 + index * 0.45));
+        const brightness = Math.round(-80 + pulse * 150);
+        lamp.set("fill", adjustColor(color, brightness));
+
+        const glow = pulse * pulse * 0.75;
+        if (glow > 0.01) {
+          group.set(
+            "shadow",
+            new fabric.Shadow({
+              color: `rgba(${glowRgb}, ${glow})`,
+              blur: 18 * pulse,
+              offsetX: 0,
+              offsetY: 0,
+            })
+          );
+          bulb.glowing = true;
+        } else if (bulb.glowing) {
+          group.set("shadow", null);
+          bulb.glowing = false;
+        }
+      });
+
+      this.frame.dirty = true;
+      this.canvas.renderAll();
+      this.bulbAnimationFrame = requestAnimationFrame(animate);
+    };
+
+    this.bulbAnimationFrame = requestAnimationFrame(animate);
+  }
+
   init() {
+    this.stopBulbAnimation();
+    this.bulbs = [];
     this.canvas.clear();
     this.rects = [];
     this.totalMove = 0;
@@ -237,12 +306,14 @@ class Roller {
       let bulb1 = this.bulb(color1, 10);
       bulb1.left = thick / 2 + slice * i;
       bulb1.top = thick / 2;
+      this.trackBulb(bulb1, color1);
 
       let color2 = colorsroller[(i + 3) % colorsroller.length];
       let bulb2 = this.bulb(color2, 10);
 
       bulb2.left = thick / 2 + slice * i;
       bulb2.top = this.canvas.height - thick / 2;
+      this.trackBulb(bulb2, color2);
 
       thegroup.push(bulb1);
       thegroup.push(bulb2);
@@ -258,12 +329,14 @@ class Roller {
       let bulb1 = this.bulb(color1, 10);
       bulb1.left = thick / 2;
       bulb1.top = thick / 2 + slice * i + slice;
+      this.trackBulb(bulb1, color1);
 
       let color2 = colorsroller[(i + 3) % colorsroller.length];
       let bulb2 = this.bulb(color2, 10);
 
       bulb2.left = this.canvas.width - thick / 2;
       bulb2.top = thick / 2 + slice * i + slice;
+      this.trackBulb(bulb2, color2);
 
       thegroup.push(bulb1);
       thegroup.push(bulb2);
@@ -295,6 +368,7 @@ class Roller {
     }
 
     this.canvas.add(this.frame);
+    this.animateBulbs();
   }
 
   changeme(canco, target) {
