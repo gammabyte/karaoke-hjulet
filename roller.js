@@ -27,6 +27,8 @@ const funArtistEntries = [
   { label: "🎤 FREE CHOICE 🎤", percent: 2 },
   { label: "🥂 CHEERS! 🥂", percent: 2 },
   { label: "🙌 AUDIENCE CHOICE 🙌", percent: 2 },
+  { label: "🎭 GENDER SWAP DUET 🎭", percent: 2 },
+  { label: "ANY DANISH ARTIST", percent: 2, icon: "denmark-flag" },
 ];
 const themeArtistEntries = [
   { label: "🎬 FILM SONGS 🎬", percent: 2 },
@@ -277,7 +279,38 @@ class Roller {
         strokeWidth: 0.5,
       });
 
-      let group1 = new fabric.Group([r, text]);
+      const specialEntry = specialArtistEntries.find(
+        ({ label }) => label === this.entries[i]
+      );
+      const groupObjects = [r, text];
+      if (specialEntry?.icon === "denmark-flag") {
+        const flagWidth = 21;
+        const flagHeight = 14;
+        const flagGap = 8;
+        const textLeft = text.left - text.width / 2;
+        const flagTop = text.top + (text.height - flagHeight) / 2;
+        const flagElement = document.getElementById("denmark-flag");
+        if (!flagElement?.complete || flagElement.naturalWidth === 0) {
+          throw new Error("The Denmark flag SVG could not be loaded.");
+        }
+        const flagPositions = [
+          textLeft - flagGap - flagWidth,
+          text.left + text.width / 2 + flagGap,
+        ];
+
+        flagPositions.forEach((flagLeft) => {
+          groupObjects.push(
+            new fabric.Image(flagElement, {
+              left: flagLeft,
+              top: flagTop,
+              scaleX: flagWidth / flagElement.naturalWidth,
+              scaleY: flagHeight / flagElement.naturalHeight,
+            })
+          );
+        });
+      }
+
+      let group1 = new fabric.Group(groupObjects);
 
       alles.push(group1);
     }
