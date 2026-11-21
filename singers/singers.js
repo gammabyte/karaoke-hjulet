@@ -18,7 +18,8 @@ const DEFAULT_SINGERS = [
   "Cecilia",
   "Martin",
   "Gitte",
-  "Mette",
+  "Mette F",
+  "Metta G",
   "Thomas",
   "Peter",
   "Victoria",
@@ -29,7 +30,12 @@ const DEFAULT_SINGERS = [
   "Patrick",
   "Mathilde",
   "Henrik",
-  "Hanne",
+  "Lise",
+  "Karen",
+  "Jakob S",
+  "Jacob HB",
+  "Jesper",
+  "Mikkel",
 ];
 /**
  * SINGER MANAGEMENT SYSTEM 
