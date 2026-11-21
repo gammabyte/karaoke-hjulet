@@ -1,6 +1,6 @@
 :root {
     --theme-gradient: linear-gradient(150deg, rgba(9, 20, 45, 0.88), rgba(18, 61, 72, 0.72), rgba(216, 184, 106, 0.28));
-    --theme-image: none;
+    --theme-image: url("theme/midnight_lounge/background.jpg");
     --button-color: #d8b86a;
     --button-shadow: #123d48;
 }

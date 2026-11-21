@@ -1,6 +1,6 @@
 :root {
     --theme-gradient: linear-gradient(135deg, rgba(255, 107, 94, 0.52), rgba(37, 198, 200, 0.48), rgba(255, 212, 71, 0.38));
-    --theme-image: none;
+    --theme-image: url("theme/tropical_heat/background.jpg");
     --button-color: #ffd447;
     --button-shadow: #c74750;
 }
