@@ -1,19 +1,20 @@
-
 /* CSS */
 .button-19 {
   appearance: button;
   background-color: var(--button-shadow);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   border: solid transparent;
   border-radius: 16px;
   border-width: 0 0 4px;
   box-sizing: border-box;
-  color: #FFFFFF;
+  color: #ffffff;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1);
   cursor: pointer;
   display: inline-block;
-  font-family: din-round,sans-serif;
+  font-family: din-round, sans-serif;
   font-size: 15px;
   font-weight: 700;
-  letter-spacing: .8px;
+  letter-spacing: 0.8px;
   line-height: 20px;
   outline: none;
   overflow: visible;
@@ -22,7 +23,7 @@
   text-transform: uppercase;
   touch-action: manipulation;
   transform: translateZ(0);
-  transition: filter .2s;
+  transition: filter 0.2s;
   user-select: none;
   -webkit-user-select: none;
   vertical-align: middle;
@@ -57,8 +58,8 @@
 
 .button-19:disabled {
   cursor: not-allowed;
-  filter: grayscale(1) brightness(.7);
-  opacity: .7;
+  filter: grayscale(1) brightness(0.7);
+  opacity: 0.7;
 }
 
 .button-19:active {
